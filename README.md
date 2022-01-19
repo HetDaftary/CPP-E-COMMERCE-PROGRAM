@@ -11,7 +11,7 @@ Creating a basic C++ console app for e-commerce related work.
 
 ## Schema of Database
 
-<img src="img/drawSQL-export-2022-01-16_11 54.png">
+<img src="img/drawSQL-export-2022-01-19_17 09.png">
 
 ## UML Diagram for classes
 
@@ -20,7 +20,7 @@ Creating a basic C++ console app for e-commerce related work.
 ## Credits
 
 - [@Sloan Kelly](https://www.youtube.com/channel/UC4LMPKWdhfFlJrJ1BHmRhMQ) for tutorial on making a TCP client and server in Linux.
-- And [GeeksForGeeks](https://www.geeksforgeeks.org/socket-programming-in-cc-handling-multiple-clients-on-server-without-multi-threading/) to give a way to handle multiple clients.
+- [@Jacob Scober](https://www.youtube.com/channel/UCwd5VFu4KoJNjkWJZMFJGHQ) for tutorial on mutli-threaded server.
 - JSON library borrowed from [nlohmann](https://github.com/nlohmann/json)
 - Logger is borrowed from [@danielblagy](https://github.com/danielblagy/Yelloger) Yelloger repo which I got to know about by his [YouTube Tutorial series](https://www.youtube.com/watch?v=1rnmYBSppYY&list=PL5Lk2LPoiyAKcw7T-_FB_4BNrWkxfwnus)
 - This logger library is updated by me to log about various types of logs in di
