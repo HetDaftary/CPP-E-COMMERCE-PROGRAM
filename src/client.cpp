@@ -7,6 +7,8 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <string>
+#include <openssl/sha.h>
+// For SHA512 function.
 #include "Logger/logger.hpp"
 
 using std::string;
@@ -21,6 +23,12 @@ using std::vector;
 #define PORT 54000
 
 string seperator = ",";
+
+string sha512(string toHash) {
+    unsigned char* hash = (unsigned char*) malloc(SHA512_DIGEST_LENGTH);
+    SHA512((const unsigned char*)toHash.c_str(), toHash.length(), hash);
+    return string((char*) hash);
+}
 
 string join(string delim, vector<string> strings) {
     string result = "";
@@ -101,7 +109,9 @@ int main() {
             cout << "Enter password: ";
             cin >> password;
 
+            password = sha512(password);
             vector<string> toSendParts = {option, username, password};
+            // We are sending password's hash has we cannot send the passwords in plain text.
 
             string response = handleRequest(sock, toSendParts);
 
@@ -122,6 +132,7 @@ int main() {
 
             cout << "Enter password: ";
             cin >> password;
+            password = sha512(password);
 
             cout << "Enter initial Balance: ";
             cin >> initialBalance;
@@ -130,7 +141,7 @@ int main() {
             
             string response = handleRequest(sock, toSendParts);
 
-            if (response.size() != 0) {
+            if (response == "0") {
                 cout << "User already exists\n";
             } else {
                 cout << "Sign up sucessful";
@@ -164,7 +175,8 @@ int main() {
             cout << "Enter new password: ";
             cin >> newPassword;
 
-            if (oldPassword == password) {
+            if (sha512(oldPassword) == password) {
+                newPassword = sha512(newPassword);
                 vector<string> toSendParts = {option, username, newPassword};
                 
                 handleRequest(sock, toSendParts);

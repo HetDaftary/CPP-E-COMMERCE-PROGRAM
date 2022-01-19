@@ -36,7 +36,7 @@ string createTableSyntax[] = {
     "CREATE TABLE IF NOT EXISTS \"LaptopDetails\" (\"productName\" TEXT,\"countryOfOrigin\" TEXT,\"price\" INTEGER,\"ram\" INTEGER,\"rom\" INTEGER,\"hasTouchScreen\"	INTEGER, PRIMARY KEY(\"productName\"));",
     "CREATE TABLE IF NOT EXISTS \"SmartphoneDetails\" (\"productName\" TEXT, \"price\" INTEGER,\"numberOfCameras\" INTEGER, \"processor\"	TEXT,\"ram\"	INTEGER,\"rom\"	INTEGER,\"countryOfOrigin\"	TEXT,PRIMARY KEY(\"productName\"));",
     "CREATE TABLE IF NOT EXISTS \"Stock\" (\"productName\" TEXT,\"quantity\"	INTEGER, PRIMARY KEY(\"productName\"));",
-    "CREATE TABLE IF NOT EXISTS \"Users\" (\"username\" TEXT,	\"password\" TEXT, \"balance\" INTEGER,	PRIMARY KEY(\"username\"));"
+    "CREATE TABLE IF NOT EXISTS \"Users\" (\"username\" TEXT,	\"password\" BLOB, \"balance\" INTEGER,	PRIMARY KEY(\"username\"));"
 };
 string ordersFileName = "data/orders.txt";
 

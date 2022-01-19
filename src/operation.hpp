@@ -54,9 +54,9 @@ public:
 
         if (zErrMsg) {
             // If User exists, this will be printed.
-            response = zErrMsg;
+            response = "0";
         } else {
-            response = "User created successfully.";
+            response = "1";
         }
     }
 

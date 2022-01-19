@@ -9,6 +9,7 @@ Creating a basic C++ console app for e-commerce related work.
 - Data would be stored in sqlite database.
 - We store data of orders in a TXT file.
 - The data passed between client and server will be in TXT FORMAT.
+- We use SHA512 hashing to store passwords from openssl.
 
 ## Schema of Database
 
