@@ -6,7 +6,8 @@ Creating a basic C++ console app for e-commerce related work.
 - Seller and Costumer codes are clients to the server and a server code will be running.
 - For now, we are using a loopback ip. 
 - Port used will be 54000.
-- Data would be stored in sqlite database 
+- Data would be stored in sqlite database.
+- We store data of orders in a TXT file.
 - The data passed between client and server will be in TXT FORMAT.
 
 ## Schema of Database
