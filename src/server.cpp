@@ -57,10 +57,59 @@ char* solveRequest(char* buffer) {
     } else if (request[0] == "get_balance") {
         newOp->getBalance(request[1]);
     }
-    std::cout << "Sending response: " << newOp->response;
-    return newOp->response;
+    return newOp->getResponse();
 }
-     
+
+void handleConnection(int socket) {
+    char buffer[SOMAXCONN];
+    int valread;
+    while ((valread = read(socket, buffer, SOMAXCONN)) > 0) {
+        buffer[valread] = '\0';
+        char* response = solveRequest(buffer);
+        write(socket, response, strlen(response));
+    }
+    close(socket);
+}
+
+int main(int argc, char* argv[]) {
+    Logger::EnableFileOutput();
+
+    int opt = 1;
+    int master_socket, addrlen, new_socket, client_socket[PENDING_CONNECTIONS], max_clients = PENDING_CONNECTIONS, activity, i, valread, sd;
+    int max_sd;
+
+    master_socket = socket(AF_INET, SOCK_STREAM, 0);
+
+    //set master socket to allow multiple connections , 
+    //this is just a good habit, it will work without this 
+    if(setsockopt(master_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0 ) {  
+        Logger::Error("setsockopt");  
+        exit(EXIT_FAILURE);  
+    }  
+
+    struct sockaddr_in address;
+    
+    address.sin_family = AF_INET;  
+    address.sin_addr.s_addr = INADDR_ANY;  
+    address.sin_port = htons( PORT );  
+
+    //bind the socket to localhost port 54000 
+    bind(master_socket, (struct sockaddr *)&address, sizeof(address));
+         
+    //try to specify maximum of 3 pending connections for the master socket 
+    listen(master_socket, PENDING_CONNECTIONS);
+
+    thread* t;
+
+    while (true) {
+        addrlen = sizeof(address);
+        new_socket = accept(master_socket, (struct sockaddr *)&address, (socklen_t*)&addrlen);
+
+        t = new thread(handleConnection, new_socket);
+    }
+}
+
+/*
 int main(int argc , char *argv[]) {
     Logger::EnableFileOutput();  
 
@@ -208,3 +257,4 @@ int main(int argc , char *argv[]) {
     Logger::CloseFileOutput();
     return 0;  
 }  
+*/

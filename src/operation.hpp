@@ -30,35 +30,40 @@ string join(string delim, vector<string> strings) {
 } 
 
 class Operation {
+    sqlite3* db;
+    char* response = NULL;
 public:
-    char* response = "";
+    Operation() {
+        sqlite3_open(databaseFileName.c_str(), &db);
+    }
+
+    Operation(sqlite3* db) {
+        this->db = db;
+    }
+
+    char* getResponse() {
+        return response;
+    }
+
     void createUser(string username, string password, int initialBalance) {
         // Write insert query here.
-        sqlite3 *db;
         char *zErrMsg = 0;
-        string sql;
-        sqlite3_open(databaseFileName.c_str(), &db);
-        
-        sql = "INSERT INTO Users (username, password, balance) VALUES ('" + username + "', '" + password + "', " + to_string(initialBalance) + ");";
+        string sql = "INSERT INTO Users (username, password, balance) VALUES ('" + username + "', '" + password + "', " + to_string(initialBalance) + ");";
 
         sqlite3_exec(db, sql.c_str(), NULL, NULL, & zErrMsg);
 
         if (zErrMsg) {
             // If User exists, this will be printed.
             response = zErrMsg;
+        } else {
+            response = "User created successfully.";
         }
-
-        sqlite3_close(db);
     }
 
     void login(string username, string password) {
         // Write select query here.
-        sqlite3 *db;
         char *zErrMsg = 0;
-        string sql;
-        sqlite3_open(databaseFileName.c_str(), &db);
-        
-        sql = "SELECT password from Users WHERE username=\"" + username + "\";";
+        string sql = "SELECT password from Users WHERE username=\"" + username + "\";";
         
         sqlite3_stmt* stmt = NULL;
 
@@ -81,32 +86,25 @@ public:
 
         sqlite3_finalize(stmt);
 
-        sqlite3_close(db);
     }
 
     void changePassword(string username, string newPassword) {
         // Write update query here.
-        sqlite3 *db;
         char *zErrMsg = 0;
-        string sql;
-        sqlite3_open(databaseFileName.c_str(), &db);
-        
-        sql = "UPDATE Users SET password = \"" + newPassword + "\" WHERE username = \"" + username + "\";";
+        string sql = "UPDATE Users SET password = \"" + newPassword + "\" WHERE username = \"" + username + "\";";
 
         sqlite3_exec(db, sql.c_str(), NULL, NULL, &zErrMsg);
+
+        response = "Password changed successfully.";
 
         // We do not need to worry about this because the client's username will always be correct when calling this.
         // This statement will throw errors when the username is not found.
 
-        sqlite3_close(db);
     }
 
     void getProductDetails() {
         // Write select query here.
-        sqlite3 *db;
-        char *zErrMsg = 0;
-        string sql;
-        sqlite3_open(databaseFileName.c_str(), &db);
+        char *zErrMsg = NULL;
         
         vector<string> productDetails;
 
@@ -161,20 +159,12 @@ public:
         sqlite3_finalize(stmt);
 
         this -> response = (char*)ans.c_str();
-
-        sqlite3_close(db);
-
-        //std::cout << "Method ends here.\n";
     }
     
     void buy(string type, string username, string productName, int qauntity) {
         // Write select query here.
-        sqlite3 *db;
         char *zErrMsg = 0;
-        string sql;
-        sqlite3_open(databaseFileName.c_str(), &db);
-        
-        sql = "SELECT quantity FROM Stock WHERE productName = '" + productName + "';";
+        string sql = "SELECT quantity FROM Stock WHERE productName = '" + productName + "';";
 
         sqlite3_stmt *stmt = NULL;
         int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
@@ -284,21 +274,13 @@ public:
         } else {
             response = "Insufficient balance";
         }
-
-        sqlite3_close(db);
     }
     
     void addMoney(string username, int amount) {
         // Update User balance and add amount.
-        sqlite3 *db;
-
         char *zErrMsg = 0;
 
-        string sql;
-
-        sqlite3_open(databaseFileName.c_str(), &db);
-
-        sql = "UPDATE Users SET balance = balance + " + to_string(amount) + " WHERE username = '" + username + "';";
+        string sql = "UPDATE Users SET balance = balance + " + to_string(amount) + " WHERE username = '" + username + "';";
 
         int rc = sqlite3_exec(db, sql.c_str(), NULL, NULL, &zErrMsg);
         if (zErrMsg) {
@@ -343,13 +325,8 @@ public:
     }
 
     void getBalance(string username) {
-        sqlite3* db;
         char* zErrMsg = 0;
-        string sql;
-
-        sqlite3_open(databaseFileName.c_str(), &db);
-
-        sql = "SELECT balance FROM Users WHERE username = '" + username + "';";
+        string sql = "SELECT balance FROM Users WHERE username = '" + username + "';";
 
         sqlite3_stmt *stmt = NULL;
 
@@ -378,8 +355,9 @@ public:
         // c_str returns the char* used by this local string object.
         // This does not send a copy of the string.
         // So, it gets freed after the completion of this function.
-        //std::cout << response << endl;
+    }
 
+    ~Operation() {
         sqlite3_close(db);
     }
 };
