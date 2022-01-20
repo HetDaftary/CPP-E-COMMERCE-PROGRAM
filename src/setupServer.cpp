@@ -56,7 +56,7 @@ uniform_int_distribution<int> stockDistribution(10, 100);
 vector<Smartphone*> getSmartphoneDetails() {
     vector<Smartphone*> smartphones;
     for (int i = 0; i < numberOfSmartphones; i++) {
-        string productName = smartphoneNames[smartphoneDistribution(mt)], processor = "Snapdragon", countryOfOrigin = countries[countryDistribution(mt)];
+        string productName = smartphoneNames[i], processor = "Snapdragon", countryOfOrigin = countries[countryDistribution(mt)];
         int price = priceDistribution(mt), ram = 4 * ramDistribution(mt), rom = 8 * ramDistribution(mt), numberOfCameras = ramDistribution(mt);
 
         Smartphone* s = new Smartphone(productName, countryOfOrigin, price, numberOfCameras, processor, ram, rom);
@@ -69,7 +69,7 @@ vector<Smartphone*> getSmartphoneDetails() {
 vector<Laptop*> getLaptopDetails() {
     vector<Laptop*> laptops;
     for (int i = 0; i < numberOfSmartphones; i++) {
-        string productName = laptopNames[laptopDistribution(mt)], countryOfOrigin = countries[countryDistribution(mt)];
+        string productName = laptopNames[i], countryOfOrigin = countries[countryDistribution(mt)];
         int price = priceDistribution(mt), ram = 4 * ramDistribution(mt), rom = 256 * ramDistribution(mt);
         bool hasTouchScreen = (bool)hasTouchScreenDistribution(mt);
 

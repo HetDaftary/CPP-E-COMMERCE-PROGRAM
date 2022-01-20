@@ -1,27 +1,29 @@
 #include <iostream>
-#include "nlohmann/json.hpp"
 
 using std::string;
 using std::ostream;
-using nlohmann::json;
 using std::to_string;
 
 class Product {
 protected:
-    json data;
+    string productName, countryOfOrigin;
+    int price;
 public:
     Product(string productName, string countryOfOrigin, int price) {
-        data["productName"] = productName;
-        data["countryOfOrigin"] = countryOfOrigin;
-        data["price"] = price;
+        this->productName = productName;
+        this->countryOfOrigin = countryOfOrigin;
+        this->price = price;
     }
 
     string to_str() {
-        return data.dump(4);
+        string result = productName + ":\n";
+        result += "\tCountry of origin: " + countryOfOrigin + "\n";
+        result += "\tPrice: " + to_string(price) + "\n";
+        return result;
     }
 
     string getProductName() {
-        return data["productName"];
+        return productName;
     }
 
     // This method needs to be defined in every derived class.
@@ -30,28 +32,48 @@ public:
 };
 
 class Smartphone : public Product {
+    int ram, rom, numberOfCameras;
+    string processor;
 public:
     Smartphone(string productName, string countryOfOrigin, int price, int numberOfCameras, string processor, int ram, int rom) : Product(productName, countryOfOrigin, price) {
-        data["numberOfCameras"] = numberOfCameras;
-        data["processor"] = processor;
-        data["ram"] = ram;
-        data["rom"] = rom;
+        this->numberOfCameras = numberOfCameras;
+        this->processor = processor;
+        this->ram = ram;
+        this->rom = rom;
+    }
+
+    string to_str() {
+        string result = Product::to_str();
+        result += "\tNumber of cameras: " + to_string(numberOfCameras) + "\n";
+        result += "\tProcessor: " + processor + "\n";
+        result += "\tRAM: " + to_string(ram) + "\n";
+        result += "\tROM: " + to_string(rom) + "\n";
+        return result;
     }
 
     string getSQLInsertStatement() {
-        return "INSERT INTO \"SmartphoneDetails\" (productName, countryOfOrigin, price, numberOfCameras, processor, ram, rom) VALUES (\""+ string(data["productName"]) + "\",\"" + string(data["countryOfOrigin"]) + string("\",\"") + to_string(data["price"]) + "\",\"" + to_string(data["numberOfCameras"]) + "\",\"" + string(data["processor"]) + "\",\"" + to_string(data["ram"]) + "\",\"" + to_string(data["rom"]) + "\");";
+        return "INSERT INTO \"SmartphoneDetails\" (productName, countryOfOrigin, price, numberOfCameras, processor, ram, rom) VALUES (\""+ string(productName) + "\",\"" + string(countryOfOrigin) + string("\",") + to_string(price) + "," + to_string(numberOfCameras) + ",\"" + string(processor) + "\"," + to_string(ram) + "," + to_string(rom) + ");";
     }
 };
 
 class Laptop : public Product {
+    int ram, rom, hasTouchScreen;
 public:
     Laptop(string productName, string countryOfOrigin, int price, int ram, int rom, int hasTouchScreen) : Product(productName, countryOfOrigin, price) {
-        data["ram"] = ram;
-        data["rom"] = rom;
-        data["hasTouchScreen"] = hasTouchScreen;
+        this->ram = ram;
+        this->rom = rom;
+        this->hasTouchScreen = hasTouchScreen;
+    }
+
+    string to_str() {
+        string result = Product::to_str();
+        result += "\tRAM: " + to_string(ram) + "\n";
+        result += "\tROM: " + to_string(rom) + "\n";
+        result += "\tHas touch screen: " + to_string(hasTouchScreen) + "\n";
+        return result;
     }
 
     string getSQLInsertStatement() {
-        return "INSERT INTO \"LaptopDetails\" (productName, countryOfOrigin, price, hasTouchScreen, ram, rom) VALUES (\"" + string(data["productName"]) + "\",\"" + string(data["countryOfOrigin"]) + "\",\"" + to_string(data["price"]) + "\",\"" + to_string(data["hasTouchScreen"]) + "\",\"" + to_string(data["ram"]) + "\",\"" + to_string(data["rom"]) + "\");";
+        return "INSERT INTO \"LaptopDetails\" (productName, countryOfOrigin, price, hasTouchScreen, ram, rom) VALUES (\"" + string(productName) + "\",\"" + string(countryOfOrigin) + "\"," + to_string(price) + "," + to_string(hasTouchScreen) + "," + to_string(ram) + "," + to_string(rom) + ");";
     }
 };  
