@@ -10,15 +10,22 @@
 // #include <netinet/in.h> 
 // #include <sys/time.h> //FD_SET, FD_ISSET, FD_ZERO macros 
 #include <thread>
+#include <queue>
+#include <condition_variable>
 
 #define PORT 54000
 #define PENDING_CONNECTIONS 10
-
-/**
- * @brief TODO Changes.
- */
+#define THREAD_POOL_SIZE 10
 
 using std::thread;
+using std::condition_variable;
+using std::queue;
+using std::unique_lock;
+
+thread threadPool[THREAD_POOL_SIZE];
+queue<int> connectionQueue;
+mutex queueMutex;
+condition_variable queueCondition;
 
 vector<string> split(string delim, string toSplit) {
     char* toSplitC = (char*)toSplit.c_str();
@@ -70,6 +77,21 @@ void handleConnection(int socket) {
     close(socket);
 }
 
+void threadFunction() {
+    int socket;
+    while (true) {
+        {
+            unique_lock<mutex> lock(queueMutex);
+            if (connectionQueue.empty()) {
+                queueCondition.wait(lock, []{return !connectionQueue.empty();});
+            }
+            socket = connectionQueue.front();
+            connectionQueue.pop();
+        }
+        handleConnection(socket);
+    }
+}
+
 int main(int argc, char* argv[]) {
     Logger::EnableFileOutput();
 
@@ -98,13 +120,18 @@ int main(int argc, char* argv[]) {
     //try to specify maximum of 3 pending connections for the master socket 
     listen(master_socket, PENDING_CONNECTIONS);
 
-    thread* t;
+    for (int i = 0; i < THREAD_POOL_SIZE; i++) {
+        threadPool[i] = thread(threadFunction);
+    }
 
     while (true) {
         addrlen = sizeof(address);
         new_socket = accept(master_socket, (struct sockaddr *)&address, (socklen_t*)&addrlen);
 
-        t = new thread(handleConnection, new_socket);
+        queueMutex.lock();
+        connectionQueue.push(new_socket);
+        queueCondition.notify_one();
+        queueMutex.unlock();
     }
 }
 
