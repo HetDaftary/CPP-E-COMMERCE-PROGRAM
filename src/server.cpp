@@ -16,7 +16,6 @@
 
 /**
  * @brief TODO Changes.
- * 2. Use multi threaded server instead of normal server for multi threading
  */
 
 using std::thread;
