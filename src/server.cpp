@@ -38,26 +38,26 @@ vector<string> split(string delim, string toSplit) {
 char* solveRequest(char* buffer) {
     vector<string> request = split(",", string(buffer));
 
-    Operation* newOp = new Operation();
+    Operation newOp;
                     
     if (request[0] == "login") {
-        newOp->login(request[1], request[2]);
+        newOp.login(request[1], request[2]);
     } else if (request[0] == "sign_up") {
-        newOp->createUser(request[1], request[2], stoi(request[3]));
+        newOp.createUser(request[1], request[2], stoi(request[3]));
     } else if (request[0] == "change_password") {
-        newOp->changePassword(request[1], request[2]);
+        newOp.changePassword(request[1], request[2]);
     } else if (request[0] == "get_product_details") {
-        newOp->getProductDetails();
+        newOp.getProductDetails();
     } else if (request[0] == "buy") {                        
-        newOp->buy(request[4], request[3], request[1], stoi(request[2]));
+        newOp.buy(request[4], request[3], request[1], stoi(request[2]));
     } else if (request[0] == "add_money") {
-        newOp->addMoney(request[1], stoi(request[2]));
+        newOp.addMoney(request[1], stoi(request[2]));
     } else if (request[0] == "order_history") {
-        newOp->getOrders(request[1]);
+        newOp.getOrders(request[1]);
     } else if (request[0] == "get_balance") {
-        newOp->getBalance(request[1]);
+        newOp.getBalance(request[1]);
     }
-    return newOp->getResponse();
+    return newOp.getResponse();
 }
 
 void handleConnection(int socket) {
