@@ -17,7 +17,7 @@ Creating a basic C++ console app for e-commerce related work.
 
 ## UML Diagram for classes
 
-<b>TODO</b>
+<img src = "img/Class Diagram.png">
 
 ## Credits
 
