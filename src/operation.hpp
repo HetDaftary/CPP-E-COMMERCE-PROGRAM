@@ -15,6 +15,7 @@ using std::getline;
 using std::ifstream;
 
 string ordersFileName = "data/orders.txt";
+mutex ordersFileMutex;
 
 string join(string delim, vector<string> strings) {
     string result = "";
@@ -31,17 +32,10 @@ string join(string delim, vector<string> strings) {
 
 class Operation {
     sqlite3* db;
-    bool isSharedConnection;
     char* response = NULL;
 public:
     Operation() {
         sqlite3_open(databaseFileName.c_str(), &db);
-        isSharedConnection = false;
-    }
-
-    Operation(sqlite3* db) {
-        this->db = db;
-        isSharedConnection = true;
     }
 
     char* getResponse() {
@@ -264,17 +258,15 @@ public:
             string order = join(",", partsToAppend);
             //std::cout << "Order is " << order << std::endl;
             //std::cout << username << " " << productName << " " << qauntity << " " << price << std::endl;
-
-            mutex mt;
         
-            mt.lock();
+            ordersFileMutex.lock();
             // Making our write operation thread safe.
             // Only one thread should be able to access to the file at a time.
             ofstream myfile;
             myfile.open ("data/orders.txt", ios::app);
             myfile << order << endl;
             myfile.close();
-            mt.unlock();
+            ordersFileMutex.unlock();
             
         } else {
             response = "Insufficient balance";
@@ -299,9 +291,7 @@ public:
         // A user can access his/her orders.
         vector<string> orders;
 
-        mutex mt;
-        
-        mt.lock();
+        ordersFileMutex.lock();
         // Making our write operation thread safe.
         // Only one thread should be able to access to the file at a time.
         
@@ -316,7 +306,7 @@ public:
             }
         }
 
-        mt.unlock();
+        ordersFileMutex.unlock();
 
         string ans = join("\n", orders);
         //std::cout << ans;
@@ -363,8 +353,6 @@ public:
     }
 
     ~Operation() {
-        if (!isSharedConnection) {
-            sqlite3_close(db);
-        }
+        sqlite3_close(db);
     }
 };
