@@ -161,7 +161,9 @@ public:
 
         sqlite3_finalize(stmt);
 
-        this -> response = (char*)ans.c_str();
+        char* toSend = (char*)ans.c_str();
+        this -> response = new char[ans.length() + 1];
+        strcpy(this -> response, toSend);
     }
     
     void buy(string type, string username, string productName, int qauntity) {
