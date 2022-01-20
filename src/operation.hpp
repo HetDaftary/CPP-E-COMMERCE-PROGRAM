@@ -320,7 +320,7 @@ public:
 
         string ans = join("\n", orders);
         //std::cout << ans;
-        response = (char*)malloc(sizeof(char) * (ans.length() + 1));
+        response = new char[ans.length() + 1];
         strcpy(response, ans.c_str());
         // I am doing this because it throws garbage value otherwise.
         // c_str returns the char* used by this local string object.
@@ -354,7 +354,7 @@ public:
         rc = sqlite3_finalize(stmt);
 
         string balanceStr = to_string(balance);
-        response = (char*) malloc(sizeof(char) * (balanceStr.length() + 1));
+        response = new char[balanceStr.length() + 1];
         strcpy(response, balanceStr.c_str());
         // I am doing this because it throws garbage value otherwise.
         // c_str returns the char* used by this local string object.
