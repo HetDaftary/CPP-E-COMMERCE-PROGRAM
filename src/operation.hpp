@@ -134,7 +134,7 @@ public:
             int rom = sqlite3_column_int(stmt, 5);
             string countryOfOrigin = string((char*)sqlite3_column_text(stmt, 6));
 
-            Smartphone* s = new Smartphone(productName, countryOfOrigin, price, numberOfCameras, processor, ram, rom);
+            Product* s = new Smartphone(productName, countryOfOrigin, price, numberOfCameras, processor, ram, rom);
             //std::cout << s->to_str() << std::endl;
             productDetails.push_back(s->to_str());
         }
@@ -156,7 +156,7 @@ public:
             int rom = sqlite3_column_int(stmt, 4);
             int hasTouchScreen = sqlite3_column_int(stmt, 5);
 
-            Laptop* l = new Laptop(productName, countryOfOrigin, price, ram, rom, hasTouchScreen);
+            Product* l = new Laptop(productName, countryOfOrigin, price, ram, rom, hasTouchScreen);
             productDetails.push_back(l->to_str());
         }
 

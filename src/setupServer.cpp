@@ -53,27 +53,27 @@ uniform_int_distribution<int> hasTouchScreenDistribution(0, 2);
 uniform_int_distribution<int> priceDistribution(10000, 20001);
 uniform_int_distribution<int> stockDistribution(10, 100);
 
-vector<Smartphone*> getSmartphoneDetails() {
-    vector<Smartphone*> smartphones;
+vector<Product*> getSmartphoneDetails() {
+    vector<Product*> smartphones;
     for (int i = 0; i < numberOfSmartphones; i++) {
         string productName = smartphoneNames[i], processor = "Snapdragon", countryOfOrigin = countries[countryDistribution(mt)];
         int price = priceDistribution(mt), ram = 4 * ramDistribution(mt), rom = 8 * ramDistribution(mt), numberOfCameras = ramDistribution(mt);
 
-        Smartphone* s = new Smartphone(productName, countryOfOrigin, price, numberOfCameras, processor, ram, rom);
+        Product* s = new Smartphone(productName, countryOfOrigin, price, numberOfCameras, processor, ram, rom);
         smartphones.push_back(s);
     }
 
     return smartphones;
 }
 
-vector<Laptop*> getLaptopDetails() {
-    vector<Laptop*> laptops;
+vector<Product*> getLaptopDetails() {
+    vector<Product*> laptops;
     for (int i = 0; i < numberOfSmartphones; i++) {
         string productName = laptopNames[i], countryOfOrigin = countries[countryDistribution(mt)];
         int price = priceDistribution(mt), ram = 4 * ramDistribution(mt), rom = 256 * ramDistribution(mt);
         bool hasTouchScreen = (bool)hasTouchScreenDistribution(mt);
 
-        Laptop* l = new Laptop(productName, countryOfOrigin, price, ram, rom, hasTouchScreen);
+        Product* l = new Laptop(productName, countryOfOrigin, price, ram, rom, hasTouchScreen);
         laptops.push_back(l);
     }
 
@@ -98,16 +98,16 @@ int main() {
         }
     }
 
-    vector<Laptop*> laptopDetails = getLaptopDetails();
+    vector<Product*> laptopDetails = getLaptopDetails();
 
     #if DEBUG
-    for (Laptop* l : laptopDetails) {
+    for (Product* l : laptopDetails) {
         Logger::Debug(l->to_str().c_str());
     }
     #endif
 
     // Insert all of this in LaptopDetails table.
-    for (Laptop* laptop : laptopDetails) {
+    for (Product* laptop : laptopDetails) {
         string sql = laptop->getSQLInsertStatement();
         sqlite3_exec(db, sql.c_str(), NULL, NULL, &errorMsg);
 
@@ -120,9 +120,9 @@ int main() {
         }
     }
 
-    vector<Smartphone*> smartphoneDetails = getSmartphoneDetails();
+    vector<Product*> smartphoneDetails = getSmartphoneDetails();
 
-    for (Smartphone* smartphone : smartphoneDetails) {
+    for (Product* smartphone : smartphoneDetails) {
         string sql = smartphone->getSQLInsertStatement();
         sqlite3_exec(db, sql.c_str(), NULL, NULL, &errorMsg);
 

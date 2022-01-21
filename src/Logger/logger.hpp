@@ -7,6 +7,7 @@
 using std::string;
 using std::mutex;
 
+mutex logMutex;
 string databaseFileName = "data/database.db";
 
 #define numberOfPriorities 6
@@ -32,12 +33,6 @@ public:
 
 	static void EnableFileOutput()
 	{
-		enable_file_output();
-	}
-
-	static void EnableFileOutput(const char* new_filepath[])
-	{
-		
 		enable_file_output();
 	}
 
@@ -99,8 +94,7 @@ public:
 			char buffer[80];
 			strftime(buffer, 80, "%c", timestamp);
 
-			mutex mtx;
-			mtx.lock();
+			logMutex.lock();
 
 			fprintf(files[DebugPriority], "%s Database contents:\n", buffer);
 			// Print comma separated values.
@@ -109,7 +103,7 @@ public:
 				fprintf(files[DebugPriority], "%s, ", (const char*)sqlite3_column_text(stmt, 1));
 				fprintf(files[DebugPriority], "%d\n", sqlite3_column_int(stmt, 2));
 			}	
-			mtx.unlock();
+			logMutex.unlock();
 		}
 	}
 
@@ -122,16 +116,14 @@ private:
 		char buffer[80];
 		strftime(buffer, 80, "%c", timestamp);
 
-		mutex mtx;
-
-		mtx.lock();
+		logMutex.lock();
 		if (files[message_priority]) {
 			fprintf(files[message_priority], "%s\t", buffer);
 			fprintf(files[message_priority], message, args...);
 			fprintf(files[message_priority], "\n");
 			fflush(files[message_priority]);
 		}
-		mtx.unlock();
+		logMutex.unlock();
 	}
 
 	static void enable_file_output()
