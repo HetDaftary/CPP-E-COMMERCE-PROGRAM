@@ -3,11 +3,9 @@
 #include <mutex>
 #include <ctime>
 #include "sqlite3.h"
-#include "nlohmann/json.hpp"
 
 using std::string;
 using std::mutex;
-using nlohmann::json;
 
 string databaseFileName = "data/database.db";
 
@@ -82,10 +80,6 @@ public:
 	static void Critical(const char* message, Args... args)
 	{
 		log(CriticalPriority, message, args...);
-	}
-
-	static void LogOrder(json data) {
-		Logger::Debug("Order is %s %d", std::string(data["name"]).c_str(), (int)data["quantity"]);
 	}
 
 	static void PrintDatabase(sqlite3* db) {

@@ -21,7 +21,9 @@ using std::thread;
 using std::condition_variable;
 using std::queue;
 using std::unique_lock;
+using std::vector;
 
+string seperator = ",";
 thread threadPool[THREAD_POOL_SIZE];
 queue<int> connectionQueue;
 mutex queueMutex;
@@ -42,7 +44,7 @@ vector<string> split(string delim, string toSplit) {
 }
 
 char* solveRequest(char* buffer) {
-    vector<string> request = split(",", string(buffer));
+    vector<string> request = split(seperator, string(buffer));
 
     Operation newOp;
                     
@@ -63,6 +65,7 @@ char* solveRequest(char* buffer) {
     } else if (request[0] == "get_balance") {
         newOp.getBalance(request[1]);
     }
+
     return newOp.getResponse();
 }
 

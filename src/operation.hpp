@@ -1,6 +1,8 @@
 #include "sqlite3.h"
 #include "Logger/logger.hpp"
 #include <iostream>
+#include <cstring>
+#include <vector>
 #include <fstream>
 #include "products/products.hpp"
 
@@ -275,21 +277,23 @@ public:
     
     void addMoney(string username, int amount) {
         // Update User balance and add amount.
-        char *zErrMsg = 0;
-
+        char *zErrMsg = NULL;
+        
         string sql = "UPDATE Users SET balance = balance + " + to_string(amount) + " WHERE username = '" + username + "';";
 
         int rc = sqlite3_exec(db, sql.c_str(), NULL, NULL, &zErrMsg);
+        
         if (zErrMsg) {
-            char* response = zErrMsg;
+            response = zErrMsg;
             return;
         }
-        char* response = "Added money";
+        response = "Added money";
     }
 
     void getOrders(string username) {
         // A user can access his/her orders.
         vector<string> orders;
+        orders.push_back("Username,Product Name,Quantity,Price");
 
         ordersFileMutex.lock();
         // Making our write operation thread safe.

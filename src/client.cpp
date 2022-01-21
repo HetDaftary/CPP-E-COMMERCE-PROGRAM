@@ -9,13 +9,13 @@
 #include <string>
 #include <openssl/sha.h>
 // For SHA512 function.
+#include <vector>
 #include "Logger/logger.hpp"
 
 using std::string;
 using std::cout;
 using std::cin;
 using std::transform;
-using nlohmann::json;
 using std::to_string;
 using std::endl;
 using std::vector;
@@ -40,18 +40,18 @@ string join(string delim, vector<string> strings) {
 
 string handleRequest(int sock, vector<string> toSendParts) {
     string toSend = join(seperator, toSendParts);
-    int sendRes = send(sock, toSend.c_str(), SOMAXCONN, 0);
+    int sendRes = send(sock, toSend.c_str(), toSend.size(), 0);
 
     if (sendRes == -1) {
         Logger::Error("Cannot send the data to the server");
         return "";
     }
 
-    char* buf = (char*)malloc(SOMAXCONN * sizeof(char));
+    char buf[SOMAXCONN];
     // Making this buffer dynamic so it does not get removed from the memory.
-    memset(buf, 0, SOMAXCONN);
-
-    recv(sock, buf, SOMAXCONN, 0);
+    
+    int valRecv = recv(sock, buf, SOMAXCONN, 0);
+    buf[valRecv] = '\0';    
 
     return string(buf);
 }
