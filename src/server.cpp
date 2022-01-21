@@ -57,7 +57,7 @@ char* solveRequest(char* buffer, sqlite3* db) {
     } else if (request[0] == "get_product_details") {
         newOp.getProductDetails();
     } else if (request[0] == "buy") {                        
-        newOp.buy(request[4], request[3], request[1], stoi(request[2]));
+        newOp.buy(request[3], request[1], stoi(request[2]));
     } else if (request[0] == "add_money") {
         newOp.addMoney(request[1], stoi(request[2]));
     } else if (request[0] == "order_history") {

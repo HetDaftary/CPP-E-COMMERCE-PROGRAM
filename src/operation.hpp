@@ -169,7 +169,7 @@ public:
         strcpy(this -> response, toSend);
     }
     
-    void buy(string type, string username, string productName, int qauntity) {
+    void buy(string username, string productName, int qauntity) {
         // Write select query here.
         char *zErrMsg = 0;
         string sql = "SELECT quantity FROM Stock WHERE productName = '" + productName + "';";
@@ -222,23 +222,24 @@ public:
 
         //std::cout << "Type is " << type << std::endl;
 
-        if (type == "smartphone") {
+        int price;
+
+        try {
             sql = "SELECT price FROM SmartphoneDetails WHERE productName = '" + productName + "';";
-        } else if (type == "laptop") {
+            stmt = NULL;
+            rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
+            rc = sqlite3_step(stmt);
+            price = sqlite3_column_int(stmt, 0);
+        } catch (char* error) {
             sql = "SELECT price FROM LaptopDetails WHERE productName = '" + productName + "';";
-        }
-
-        stmt = NULL;
-        // prepare the statement
-        rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
-        rc = sqlite3_step(stmt);
-
-        if (rc == SQLITE_DONE) {
+            stmt = NULL;
+            rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
+            rc = sqlite3_step(stmt);
+            price = sqlite3_column_int(stmt, 0);
+        } catch (char* error) {
             response = "Product not available.";
             return;
         }
-
-        int price = sqlite3_column_int(stmt, 0);
 
         rc = sqlite3_finalize(stmt);
 

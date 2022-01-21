@@ -195,17 +195,15 @@ int main() {
 
             cout << response << endl;
         } else if (option == "buy") {
-            string productName, type;
+            string productName;
             int quantity;
 
             cout << "Enter the product name: ";
             cin >> productName;
             cout << "Enter the quantity: ";
             cin >> quantity;
-            cout << "Is it a smartphone or Laptop? ";
-            cin >> type;
-
-            vector<string> toSendParts = {option, productName, to_string(quantity), username, type};
+        
+            vector<string> toSendParts = {option, productName, to_string(quantity), username};
             
             string response = handleRequest(sock, toSendParts);
 
