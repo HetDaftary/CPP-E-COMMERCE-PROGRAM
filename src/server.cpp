@@ -124,7 +124,7 @@ int main(int argc, char* argv[]) {
     //bind the socket to localhost port 54000 
     bind(master_socket, (struct sockaddr *)&address, sizeof(address));
          
-    //try to specify maximum of 3 pending connections for the master socket 
+    //trying to specify maximum of pending connections for the master socket 
     listen(master_socket, PENDING_CONNECTIONS);
 
     for (int i = 0; i < THREAD_POOL_SIZE; i++) {
