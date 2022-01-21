@@ -34,10 +34,17 @@ string join(string delim, vector<string> strings) {
 
 class Operation {
     sqlite3* db;
+    bool isSharedConnection;
     char* response = NULL;
 public:
     Operation() {
         sqlite3_open(databaseFileName.c_str(), &db);
+        isSharedConnection = false;
+    }
+
+    Operation(sqlite3* db) {
+        this->db = db;
+        isSharedConnection = true;
     }
 
     char* getResponse() {
@@ -357,6 +364,8 @@ public:
     }
 
     ~Operation() {
-        sqlite3_close(db);
+        if (!isSharedConnection) {
+            sqlite3_close(db);
+        }
     }
 };

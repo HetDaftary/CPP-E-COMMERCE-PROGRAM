@@ -43,7 +43,7 @@ vector<string> split(string delim, string toSplit) {
     return result;
 }
 
-char* solveRequest(char* buffer) {
+char* solveRequest(char* buffer, sqlite3* db) {
     vector<string> request = split(seperator, string(buffer));
 
     Operation newOp;
@@ -69,18 +69,18 @@ char* solveRequest(char* buffer) {
     return newOp.getResponse();
 }
 
-void handleConnection(int socket) {
+void handleConnection(int socket, sqlite3* db) {
     char buffer[SOMAXCONN];
     int valread;
     while ((valread = read(socket, buffer, SOMAXCONN)) > 0) {
         buffer[valread] = '\0';
-        char* response = solveRequest(buffer);
+        char* response = solveRequest(buffer, db);
         write(socket, response, strlen(response));
     }
     close(socket);
 }
 
-void threadFunction() {
+void threadFunction(sqlite3* db) {
     int socket;
     while (true) {
         {
@@ -91,12 +91,16 @@ void threadFunction() {
             socket = connectionQueue.front();
             connectionQueue.pop();
         }
-        handleConnection(socket);
+        handleConnection(socket, db);
     }
 }
 
 int main(int argc, char* argv[]) {
     Logger::EnableFileOutput();
+    sqlite3_config(SQLITE_CONFIG_SERIALIZED);
+
+    sqlite3* db;
+    sqlite3_open(databaseFileName.c_str(), &db);
 
     int opt = 1;
     int master_socket, addrlen, new_socket, client_socket[PENDING_CONNECTIONS], max_clients = PENDING_CONNECTIONS, activity, i, valread, sd;
@@ -124,7 +128,7 @@ int main(int argc, char* argv[]) {
     listen(master_socket, PENDING_CONNECTIONS);
 
     for (int i = 0; i < THREAD_POOL_SIZE; i++) {
-        threadPool[i] = thread(threadFunction);
+        threadPool[i] = thread(threadFunction, db);
     }
 
     while (true) {
@@ -136,6 +140,9 @@ int main(int argc, char* argv[]) {
         queueCondition.notify_one();
         queueMutex.unlock();
     }
+
+    sqlite3_close(db);
+    return 0;
 }
 
 /*
