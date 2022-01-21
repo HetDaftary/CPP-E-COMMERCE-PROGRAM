@@ -68,27 +68,25 @@ public:
 
     void login(string username, string password) {
         // Write select query here.
-        char *zErrMsg = 0;
         string sql = "SELECT password from Users WHERE username=\"" + username + "\";";
         
         sqlite3_stmt* stmt = NULL;
 
-        sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt,NULL);
+        sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
 
         int rc = sqlite3_step(stmt);
 
-        try {
-            string passwordOfUsername = string((char*)sqlite3_column_text(stmt, 0));
-        
-            if (passwordOfUsername == password) {
-                response = "1";
-            } else {
-                response = "0";
-            }
-        } catch (char* exception) {
-            // This will be used when the username is not found.
+        if (rc == SQLITE_DONE) {
             response = "0";
-        }   
+        }
+
+        string passwordOfUsername = string((char*)sqlite3_column_text(stmt, 0));
+        
+        if (passwordOfUsername == password) {
+            response = "1";
+        } else {
+            response = "0";
+        }
 
         sqlite3_finalize(stmt);
 
