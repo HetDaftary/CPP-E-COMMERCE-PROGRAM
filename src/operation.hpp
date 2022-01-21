@@ -132,7 +132,7 @@ public:
             int rom = sqlite3_column_int(stmt, 5);
             string countryOfOrigin = string((char*)sqlite3_column_text(stmt, 6));
 
-            Product* s = new Smartphone(productName, countryOfOrigin, price, numberOfCameras, processor, ram, rom);
+            Smartphone* s = new Smartphone(productName, countryOfOrigin, price, numberOfCameras, processor, ram, rom);
             //std::cout << s->to_str() << std::endl;
             productDetails.push_back(s->to_str());
         }
@@ -154,7 +154,7 @@ public:
             int rom = sqlite3_column_int(stmt, 4);
             int hasTouchScreen = sqlite3_column_int(stmt, 5);
 
-            Product* l = new Laptop(productName, countryOfOrigin, price, ram, rom, hasTouchScreen);
+            Laptop* l = new Laptop(productName, countryOfOrigin, price, ram, rom, hasTouchScreen);
             productDetails.push_back(l->to_str());
         }
 
@@ -227,23 +227,25 @@ public:
             stmt = NULL;
             rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
             rc = sqlite3_step(stmt);
+            if (rc == SQLITE_DONE) {
+                throw "Product not a Smartphone";
+            }
             price = sqlite3_column_int(stmt, 0);
-        } catch (char* error) {
+        } catch (char const* error) {
             sql = "SELECT price FROM LaptopDetails WHERE productName = '" + productName + "';";
             stmt = NULL;
             rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
             rc = sqlite3_step(stmt);
+            if (rc == SQLITE_DONE) {
+                throw "Product not a Laptop";
+            }
             price = sqlite3_column_int(stmt, 0);
-        } catch (char* error) {
+        } catch (char const* error) {
             response = "Product not available.";
             return;
         }
 
         rc = sqlite3_finalize(stmt);
-
-        //std::cout << "Works till here.2\n";
-
-        sql = "SELECT price FROM SmartphoneDetails WHERE productName = '" + productName + "';";
 
         if (balance >= qauntity * price) {
             balance -= qauntity * price;
