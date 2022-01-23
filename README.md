@@ -13,7 +13,7 @@ Creating a basic C++ console app for e-commerce related work.
 
 ## Schema of Database
 
-<img src="img/drawSQL-export-2022-01-23_09 57.png">
+<img src="img/drawSQL-export-2022-01-23_15 31.png">
 
 ## UML Diagram for classes
 
