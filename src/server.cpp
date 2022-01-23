@@ -23,7 +23,6 @@ using std::queue;
 using std::unique_lock;
 using std::vector;
 
-string seperator = ",";
 thread threadPool[THREAD_POOL_SIZE];
 queue<int> connectionQueue;
 mutex queueMutex;
@@ -55,7 +54,7 @@ char* solveRequest(char* buffer, sqlite3* db) {
     } else if (request[0] == "change_password") {
         newOp.changePassword(request[1], request[2]);
     } else if (request[0] == "get_product_details") {
-        newOp.getProductDetails();
+        newOp.getProductDetails(request[1]);
     } else if (request[0] == "buy") {                        
         newOp.buy(request[3], request[1], stoi(request[2]));
     } else if (request[0] == "add_money") {

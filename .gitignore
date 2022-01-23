@@ -1,3 +1,8 @@
 **/data
 **/build
 **/.vscode
+**/*.out
+**/*.exe
+**/*.o
+**/bin
+**/obj

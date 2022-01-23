@@ -16,6 +16,7 @@ using std::mutex;
 using std::getline;
 using std::ifstream;
 
+string seperator = ",";
 string ordersFileName = "data/orders.txt";
 mutex ordersFileMutex;
 
@@ -31,6 +32,14 @@ string join(string delim, vector<string> strings) {
 
     return result;
 } 
+
+int getSQLInt(sqlite3_stmt* stmt, int colName) {
+    return sqlite3_column_int(stmt, colName);
+}
+
+string getSQLText(sqlite3_stmt* stmt, int colName) {
+    return string((char*)sqlite3_column_text(stmt, colName));
+}
 
 class Operation {
     sqlite3* db;
@@ -60,15 +69,15 @@ public:
 
         if (zErrMsg) {
             // If User exists, this will be printed.
-            response = "0";
+            response = (char*)"0";
         } else {
-            response = "1";
+            response = (char*)"1";
         }
     }
 
     void login(string username, string password) {
         // Write select query here.
-        string sql = "SELECT password from Users WHERE username=\"" + username + "\";";
+        string sql = "SELECT password from Users WHERE username='" + username + "';";
         
         sqlite3_stmt* stmt = NULL;
 
@@ -77,15 +86,16 @@ public:
         int rc = sqlite3_step(stmt);
 
         if (rc == SQLITE_DONE) {
-            response = "0";
+            response = (char*)"0";
+            return;
         }
 
-        string passwordOfUsername = string((char*)sqlite3_column_text(stmt, 0));
+        string passwordOfUsername = string((char*)sqlite3_column_blob(stmt, 0));
         
         if (passwordOfUsername == password) {
-            response = "1";
+            response = (char*)"1";
         } else {
-            response = "0";
+            response = (char*)"0";
         }
 
         sqlite3_finalize(stmt);
@@ -95,177 +105,140 @@ public:
     void changePassword(string username, string newPassword) {
         // Write update query here.
         char *zErrMsg = 0;
-        string sql = "UPDATE Users SET password = \"" + newPassword + "\" WHERE username = \"" + username + "\";";
+        string sql = "UPDATE Users SET password = '" + newPassword + "' WHERE username = '" + username + "';";
 
         sqlite3_exec(db, sql.c_str(), NULL, NULL, &zErrMsg);
 
-        response = "Password changed successfully.";
-
+        response = (char*)"Password changed successfully.";
         // We do not need to worry about this because the client's username will always be correct when calling this.
         // This statement will throw errors when the username is not found.
-
     }
 
-    void getProductDetails() {
-        // Write select query here.
-        char *zErrMsg = NULL;
+    void getProductDetails(string userWants) {
+        //printf("%s %d\n", userWants.c_str(), userWants.length());
         
+        string sql;
+        sqlite3_stmt* stmt = NULL;
+        int rc, type, price, stock, ram, rom, hasTouchScreen, numberOfCameras;
+        string productName, countryOfOrigin, processor;
+
+        if (userWants == "all") {
+            sql = "SELECT * FROM ProductDetails;";
+        } else if (userWants == "smartphone") {
+            sql = "SELECT * FROM ProductDetails WHERE type = " + to_string(Product::smartphone) + ";";
+        } else if (userWants == "laptop") {
+            sql = "SELECT * FROM ProductDetails WHERE type = " + to_string(Product::laptop) + ";";
+        } else {
+            sql = "SELECT * FROM ProductDetails WHERE productName = '" + userWants + "';";
+        }
+        // Returns table details in format: (productName, countryOfOrigin, price, ram, rom, hasTouchScreen, numberOfCameras, stock, processor, type).
+
+        rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
+
         vector<string> productDetails;
 
-        // Get smartphone details from smartphone.
-        string sqlSmartphone = "SELECT productName,price,numberOfCameras,processor,ram,rom,countryOfOrigin FROM SmartphoneDetails;";
-        string sqlLaptop = "SELECT productName,countryOfOrigin,price,ram,rom,hasTouchScreen FROM LaptopDetails;";
-        
-        sqlite3_stmt* stmt = NULL;
+        int rowCount = 0;
 
-        sqlite3_prepare_v2(db, sqlSmartphone.c_str(), -1, &stmt,NULL);
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            rowCount++;
+            stock = getSQLInt(stmt, 7);
+            
+            if (stock != 0) {
+                // We want to show a product to the user only when stock for it is avaialable.
+                productName = getSQLText(stmt, 0);
+                countryOfOrigin = getSQLText(stmt, 1);
+                price = getSQLInt(stmt, 2);
+                type = getSQLInt(stmt, 9);
 
-        int ret_code;
+                if (type == Product::smartphone) {
+                    ram = getSQLInt(stmt, 3);
+                    rom = getSQLInt(stmt, 4);
+                    numberOfCameras = getSQLInt(stmt, 6);
+                    processor = getSQLText(stmt, 8);
 
-        while((ret_code = sqlite3_step(stmt)) == SQLITE_ROW){
-            //std::cout << "going inside" << std::endl;
-            string productName = string((char*)sqlite3_column_text(stmt, 0));
-            int price = sqlite3_column_int(stmt, 1);
-            int numberOfCameras = sqlite3_column_int(stmt, 2);
-            string processor = string((char*)sqlite3_column_text(stmt, 3));
-            int ram = sqlite3_column_int(stmt, 4);
-            int rom = sqlite3_column_int(stmt, 5);
-            string countryOfOrigin = string((char*)sqlite3_column_text(stmt, 6));
+                    productDetails.push_back(Smartphone(productName, countryOfOrigin, price, stock, numberOfCameras, processor, ram, rom).toStr());
+                } else if (type == Product::laptop) {
+                    ram = getSQLInt(stmt, 3);
+                    rom = getSQLInt(stmt, 4);
+                    hasTouchScreen = getSQLInt(stmt, 5);
 
-            Smartphone* s = new Smartphone(productName, countryOfOrigin, price, numberOfCameras, processor, ram, rom);
-            //std::cout << s->to_str() << std::endl;
-            productDetails.push_back(s->to_str());
+                    productDetails.push_back(Laptop(productName, countryOfOrigin, price, stock, ram, rom, hasTouchScreen).toStr());
+                } else {
+                    Logger::Critical("Product of unknown type in the database. Corruption of data possible.");
+                }
+            }
         }
 
         sqlite3_finalize(stmt);
 
-        stmt = NULL;
-
-        sqlite3_prepare_v2(db, sqlLaptop.c_str(), -1, &stmt,NULL);
-
-        ret_code = 0;
-
-        while((ret_code = sqlite3_step(stmt)) == SQLITE_ROW) {
-            //std::cout << "going inside" << std::endl;
-            string productName = string((char*)sqlite3_column_text(stmt, 0));
-            string countryOfOrigin = string((char*)sqlite3_column_text(stmt, 1));
-            int price = sqlite3_column_int(stmt, 2);
-            int ram = sqlite3_column_int(stmt, 3);
-            int rom = sqlite3_column_int(stmt, 4);
-            int hasTouchScreen = sqlite3_column_int(stmt, 5);
-
-            Laptop* l = new Laptop(productName, countryOfOrigin, price, ram, rom, hasTouchScreen);
-            productDetails.push_back(l->to_str());
+        if (rowCount == 0) {
+            response = (char*) "Product Not found";
+            return;
         }
 
-        string ans = join("\n", productDetails);
-
-        sqlite3_finalize(stmt);
-
-        char* toSend = (char*)ans.c_str();
-        this -> response = new char[ans.length() + 1];
-        strcpy(this -> response, toSend);
+        string toSend = join("\n", productDetails);
+        response = new char[toSend.size()];
+        strcpy(response, toSend.c_str());
     }
     
     void buy(string username, string productName, int qauntity) {
         // Write select query here.
         char *zErrMsg = 0;
-        string sql = "SELECT quantity FROM Stock WHERE productName = '" + productName + "';";
+        int currentStock, price, rc;
+        string sql;
 
-        sqlite3_stmt *stmt = NULL;
-        int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
+        sqlite3_stmt* stmt;
 
-        if (rc != SQLITE_OK) {
-            Logger::Error("Failed to prepare statement");
-            return;
+        try {    
+            string sql = "SELECT stock,price FROM ProductDetails WHERE productName = '" + productName + "';";
+        
+            sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
+
+            rc = sqlite3_step(stmt);
+
+            if (rc == SQLITE_DONE) {
+                throw (char*) "Product Not found";
+            }
+
+            currentStock = getSQLInt(stmt, 0);
+            price = getSQLInt(stmt, 1);
+
+            if (currentStock < qauntity) {
+                throw (char*) "Not enough stock";
+            }
+            sqlite3_finalize(stmt);
+        } catch (char* error) {
+            response = error;
+            sqlite3_finalize(stmt);
         }
-
-        rc = sqlite3_step(stmt);
-
-        int currentStock = sqlite3_column_int(stmt, 0);
-
-        if (currentStock < qauntity) {
-            response = "Insufficient stock";
-            return;
-        }
-
-        rc = sqlite3_finalize(stmt);
 
         // Check balance of user now.
-
         sql = "SELECT balance FROM Users WHERE username = '" + username + "';";
-
-        stmt = NULL;
 
         rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
 
-        if (rc != SQLITE_OK) {
-            Logger::Error("Failed to prepare statement");
-            return;
-        }
-
         rc = sqlite3_step(stmt);
 
-        if (rc == SQLITE_DONE) {
-            response = "Insufficient balance";
-            return;
-        }
-
-        int balance = sqlite3_column_int(stmt, 0);
+        int balance = getSQLInt(stmt, 0);
 
         rc = sqlite3_finalize(stmt);
 
         // Check for the price of the product from laptopDetails or smartphoneDetails 
         // and deduct the price from balance.
 
-        //std::cout << "Type is " << type << std::endl;
-
-        int price;
-
-        try {
-            sql = "SELECT price FROM SmartphoneDetails WHERE productName = '" + productName + "';";
-            stmt = NULL;
-            rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
-            rc = sqlite3_step(stmt);
-            if (rc == SQLITE_DONE) {
-                throw "Product not a Smartphone";
-            }
-            price = sqlite3_column_int(stmt, 0);
-        } catch (char const* error) {
-            sql = "SELECT price FROM LaptopDetails WHERE productName = '" + productName + "';";
-            stmt = NULL;
-            rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
-            rc = sqlite3_step(stmt);
-            if (rc == SQLITE_DONE) {
-                throw "Product not a Laptop";
-            }
-            price = sqlite3_column_int(stmt, 0);
-        } catch (char const* error) {
-            response = "Product not available.";
-            return;
-        }
-
-        rc = sqlite3_finalize(stmt);
-
         if (balance >= qauntity * price) {
             balance -= qauntity * price;
             sql = "UPDATE Users SET balance = " + to_string(balance) + " WHERE username = '" + username + "';";
             rc = sqlite3_exec(db, sql.c_str(), NULL, NULL, &zErrMsg);
-            if (rc != SQLITE_OK) {
-                Logger::Error("Failed to update balance");
-                return;
-            }
-            sql = "UPDATE Stock SET quantity = quantity - " + to_string(qauntity) + " WHERE productName = '" + productName + "';";
+
+            sql = "UPDATE ProductDetails SET stock = stock - " + to_string(qauntity) + " WHERE productName = '" + productName + "';";
             rc = sqlite3_exec(db, sql.c_str(), NULL, NULL, &zErrMsg);
-            if (rc != SQLITE_OK) {
-                Logger::Error("Failed to update stock");
-                return;
-            }
-            response = "Success";
+            
+            response = (char*) "Success";
 
             // We need to append this order to data/orders.txt
             vector<string> partsToAppend = {username, productName, to_string(qauntity), to_string(price)};
-            string order = join(",", partsToAppend);
+            string order = join(seperator, partsToAppend);
             //std::cout << "Order is " << order << std::endl;
             //std::cout << username << " " << productName << " " << qauntity << " " << price << std::endl;
         
@@ -277,9 +250,8 @@ public:
             myfile << order << endl;
             myfile.close();
             ordersFileMutex.unlock();
-            
         } else {
-            response = "Insufficient balance";
+            response = (char*)"Insufficient balance";
         }
     }
     
@@ -295,7 +267,7 @@ public:
             response = zErrMsg;
             return;
         }
-        response = "Added money";
+        response = (char*)"Added money";
     }
 
     void getOrders(string username) {
@@ -339,19 +311,9 @@ public:
 
         int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
 
-        if (rc != SQLITE_OK) {
-            Logger::Error("Failed to prepare statement");
-            return;
-        }
-
         rc = sqlite3_step(stmt);
 
-        if (rc == SQLITE_DONE) {
-            response = "User not found";
-            return;
-        }
-
-        int balance = sqlite3_column_int(stmt, 0);
+        int balance = getSQLInt(stmt, 0);
 
         rc = sqlite3_finalize(stmt);
 

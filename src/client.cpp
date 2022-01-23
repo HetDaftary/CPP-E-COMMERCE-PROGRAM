@@ -115,10 +115,10 @@ int main() {
 
             string response = handleRequest(sock, toSendParts);
 
-            if (response[0] == '1') {
+            if (response == "1") {
                 cout << "Login successful\n";
                 break;
-            } else if (response[0] == '0') {
+            } else if (response == "0") {
                 cout << "Login Failed, try again\n";
             } else {
                 Logger::Critical("Server code Login function has issues");
@@ -189,8 +189,18 @@ int main() {
                 cout << "You entered wrong old password.\n";
             } 
         } else if (option == "get_product_details") {
-            vector<string> toSendParts = {option};
-            
+            string type;
+
+            cout << "Enter product name to get details of a product\n";
+            cout << "Enter smartphone to get details of smartphones and laptop to get details for laptops";
+            cout << "Enter all for details of all products\n";
+
+            cout << "Enter option: ";
+            cin >> type;
+
+            transform(type.begin(), type.end(), type.begin(), ::tolower);
+
+            vector<string> toSendParts = {option, type};
             string response = handleRequest(sock, toSendParts);
 
             cout << response << endl;

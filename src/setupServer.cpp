@@ -33,10 +33,8 @@ const std::string laptopNames[] = {"lenovo_yoga", "hp_pavalilion", "dell"};
 #define numberOfCountries 3
 
 string createTableSyntax[] = {
-    "CREATE TABLE IF NOT EXISTS \"LaptopDetails\" (\"productName\" TEXT,\"countryOfOrigin\" TEXT,\"price\" INTEGER,\"ram\" INTEGER,\"rom\" INTEGER,\"hasTouchScreen\"	INTEGER, PRIMARY KEY(\"productName\"));",
-    "CREATE TABLE IF NOT EXISTS \"SmartphoneDetails\" (\"productName\" TEXT, \"price\" INTEGER,\"numberOfCameras\" INTEGER, \"processor\"	TEXT,\"ram\"	INTEGER,\"rom\"	INTEGER,\"countryOfOrigin\"	TEXT,PRIMARY KEY(\"productName\"));",
-    "CREATE TABLE IF NOT EXISTS \"Stock\" (\"productName\" TEXT,\"quantity\"	INTEGER, PRIMARY KEY(\"productName\"));",
-    "CREATE TABLE IF NOT EXISTS \"Users\" (\"username\" TEXT,	\"password\" BLOB, \"balance\" INTEGER,	PRIMARY KEY(\"username\"));"
+    "CREATE TABLE IF NOT EXISTS 'ProductDetails' ('productName' TEXT, 'countryOfOrigin' TEXT, 'price' INTEGER, 'ram' INTEGER, 'rom' INTEGER, 'hasTouchScreen' INTEGER, 'numberOfCameras' INTEGER, 'stock' INTEGER, 'processor'	TEXT, 'type' INTEGER, PRIMARY KEY('productName'));",
+    "CREATE TABLE IF NOT EXISTS 'Users' ('username' TEXT, 'password' TEXT, 'balance' INTEGER, PRIMARY KEY('username'));"  
 };
 string ordersFileName = "data/orders.txt";
 
@@ -53,84 +51,58 @@ uniform_int_distribution<int> hasTouchScreenDistribution(0, 2);
 uniform_int_distribution<int> priceDistribution(10000, 20001);
 uniform_int_distribution<int> stockDistribution(10, 100);
 
-vector<Product*> getSmartphoneDetails() {
-    vector<Product*> smartphones;
+void getSmartphoneDetails(vector<Product*>& products) {
     for (int i = 0; i < numberOfSmartphones; i++) {
         string productName = smartphoneNames[i], processor = "Snapdragon", countryOfOrigin = countries[countryDistribution(mt)];
-        int price = priceDistribution(mt), ram = 4 * ramDistribution(mt), rom = 8 * ramDistribution(mt), numberOfCameras = ramDistribution(mt);
+        int price = priceDistribution(mt), ram = 4 * ramDistribution(mt), rom = 8 * ramDistribution(mt), numberOfCameras = ramDistribution(mt), stock = stockDistribution(mt);
 
-        Product* s = new Smartphone(productName, countryOfOrigin, price, numberOfCameras, processor, ram, rom);
-        smartphones.push_back(s);
+        Product* s = new Smartphone(productName, countryOfOrigin, price, stock, numberOfCameras, processor, ram, rom);        
+
+        products.push_back(s);
     }
-
-    return smartphones;
 }
 
-vector<Product*> getLaptopDetails() {
+void getLaptopDetails(vector<Product*>& products) {
     vector<Product*> laptops;
     for (int i = 0; i < numberOfSmartphones; i++) {
         string productName = laptopNames[i], countryOfOrigin = countries[countryDistribution(mt)];
-        int price = priceDistribution(mt), ram = 4 * ramDistribution(mt), rom = 256 * ramDistribution(mt);
-        bool hasTouchScreen = (bool)hasTouchScreenDistribution(mt);
+        int price = priceDistribution(mt), ram = 4 * ramDistribution(mt), rom = 256 * ramDistribution(mt), stock = stockDistribution(mt), hasTouchScreen = hasTouchScreenDistribution(mt);
 
-        Product* l = new Laptop(productName, countryOfOrigin, price, ram, rom, hasTouchScreen);
-        laptops.push_back(l);
+        Product* l = new Laptop(productName, countryOfOrigin, price, stock, ram, rom, hasTouchScreen);
+        
+        products.push_back(l);
     }
-
-    return laptops;
 }
 
 
 int main() {
     Logger::EnableFileOutput();
     sqlite3* db;
+    char* errorMsg;
 
     sqlite3_open(databaseFileName.c_str(), &db);
     // This file name is mentioned in Logger.
 
-    char* errorMsg;
+    // Creating tables.
     for (string sql : createTableSyntax) {
         sqlite3_exec(db, sql.c_str(), NULL, NULL, &errorMsg);
         if (errorMsg != NULL) {
-            Logger::Error(errorMsg);
-            //free(errorMsg);
+            Logger::Critical(errorMsg);
             errorMsg = NULL;
         }
     }
 
-    vector<Product*> laptopDetails = getLaptopDetails();
+    // These functions Laptop and Smartphone details in the productDetails vector.
+    vector<Product*> productDetails;
+    getLaptopDetails(productDetails);
+    getSmartphoneDetails(productDetails);
 
-    #if DEBUG
-    for (Product* l : laptopDetails) {
-        Logger::Debug(l->to_str().c_str());
-    }
-    #endif
-
-    // Insert all of this in LaptopDetails table.
-    for (Product* laptop : laptopDetails) {
-        string sql = laptop->getSQLInsertStatement();
-        sqlite3_exec(db, sql.c_str(), NULL, NULL, &errorMsg);
-
-        string stockSQL = "INSERT INTO 'Stock'(productName,quantity) VALUES(\"" + laptop->getProductName() + "\"," + to_string(stockDistribution(mt)) + ");";
-        sqlite3_exec(db, stockSQL.c_str(), NULL, NULL, &errorMsg);
+    // Inserting products to the database.
+    for (Product* p : productDetails) {
+        sqlite3_exec(db, p->getSQLInsertStatement(), NULL, NULL, &errorMsg);
 
         if (errorMsg) {
-            Logger::Error(errorMsg);
-            errorMsg = NULL;
-        }
-    }
-
-    vector<Product*> smartphoneDetails = getSmartphoneDetails();
-
-    for (Product* smartphone : smartphoneDetails) {
-        string sql = smartphone->getSQLInsertStatement();
-        sqlite3_exec(db, sql.c_str(), NULL, NULL, &errorMsg);
-
-        string stockSQL = "INSERT INTO 'Stock'(productName,quantity) VALUES(\"" + smartphone->getProductName() + "\"," + to_string(stockDistribution(mt)) + ");";
-        sqlite3_exec(db, stockSQL.c_str(), NULL, NULL, &errorMsg);
-
-        if (errorMsg) {
-            Logger::Error(errorMsg);
+            Logger::Info(errorMsg);
             errorMsg = NULL;
         }
     }
