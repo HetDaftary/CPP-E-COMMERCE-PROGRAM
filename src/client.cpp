@@ -10,6 +10,7 @@
 #include <openssl/sha.h>
 // For SHA512 function.
 #include <vector>
+#include <cstdlib>
 #include "Logger/logger.hpp"
 
 using std::string;
@@ -91,6 +92,7 @@ int main() {
     while (true) {
         cout << "Options:\n";
         cout << "\tEnter quit to quit.\n";
+        cout << "\tEnter clear to clear screen\n";
         cout << "\tEnter login to login\n";
         cout << "\tEnter sign_up to sign up\n";
         cout << "Enter option: ";
@@ -102,6 +104,12 @@ int main() {
         if (option == "quit") {
             return 0;
             // q is entered means the person wants to quit.
+        } else if (option == "clear") {
+            #if defined(_WIN32) || defined(__CYGWIN__) 
+                system("cls");
+            #else 
+                system("clear");
+            #endif
         } else if (option == "login") {
             cout << "Enter username: ";
             cin >> username;
@@ -155,8 +163,10 @@ int main() {
     // So, we have logged in has username.
     while (true) {
         cout << "Options:\n";
+        cout << "\tEnter clear to clear screen\n";
         cout << "\tEnter change_password to change the password\n";
         cout << "\tEnter get_product_details to get the product Details\n";
+        cout << "\tEnter get_product_names to get the names of the products\n";
         cout << "\tEnter buy to buy a product\n";
         cout << "\tEnter add_money to add money to your account\n";
         cout << "\tEnter order_history to get history of your orders\n";
@@ -168,6 +178,12 @@ int main() {
 
         if (option == "quit") {
             return 0;
+        } else if (option == "clear") {
+            #if defined(_WIN32) || defined(__CYGWIN__) 
+                system("cls");
+            #else 
+                system("clear");
+            #endif
         } else if (option == "change_password") {
             string oldPassword, newPassword;
             cout << "Enter old password: ";
@@ -191,6 +207,22 @@ int main() {
         } else if (option == "get_product_details") {
             string type;
 
+            cout << "Enter product name to get details of a product\n";
+            cout << "Enter smartphone to get details of smartphones and laptop to get details for laptops";
+            cout << "Enter all for details of all products\n";
+
+            cout << "Enter option: ";
+            cin >> type;
+
+            transform(type.begin(), type.end(), type.begin(), ::tolower);
+
+            vector<string> toSendParts = {option, type};
+            string response = handleRequest(sock, toSendParts);
+
+            cout << response << endl;
+        } else if (option == "get_product_names") {
+            string type;
+            
             cout << "Enter product name to get details of a product\n";
             cout << "Enter smartphone to get details of smartphones and laptop to get details for laptops";
             cout << "Enter all for details of all products\n";

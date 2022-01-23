@@ -63,6 +63,8 @@ char* solveRequest(char* buffer, sqlite3* db) {
         newOp.getOrders(request[1]);
     } else if (request[0] == "get_balance") {
         newOp.getBalance(request[1]);
+    } else if (request[0] == "get_product_names") {
+        newOp.getProductNames(request[1]);
     }
 
     return newOp.getResponse();

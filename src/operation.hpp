@@ -122,14 +122,15 @@ public:
         int rc, type, price, stock, ram, rom, hasTouchScreen, numberOfCameras;
         string productName, countryOfOrigin, processor;
 
+        // We use stock > 0 because we want to show a product to the user only when stock is there for the product.
         if (userWants == "all") {
-            sql = "SELECT * FROM ProductDetails;";
+            sql = "SELECT * FROM ProductDetails WHERE stock > 0;";
         } else if (userWants == "smartphone") {
-            sql = "SELECT * FROM ProductDetails WHERE type = " + to_string(Product::smartphone) + ";";
+            sql = "SELECT * FROM ProductDetails WHERE type = " + to_string(Product::smartphone) + " AND stock > 0;";
         } else if (userWants == "laptop") {
-            sql = "SELECT * FROM ProductDetails WHERE type = " + to_string(Product::laptop) + ";";
+            sql = "SELECT * FROM ProductDetails WHERE type = " + to_string(Product::laptop) + " COLLATE NOCASE AND stock > 0;";
         } else {
-            sql = "SELECT * FROM ProductDetails WHERE productName = '" + userWants + "';";
+            sql = "SELECT * FROM ProductDetails WHERE productName = '" + userWants + "' COLLATE NOCASE AND stock > 0;";
         }
         // Returns table details in format: (productName, countryOfOrigin, price, ram, rom, hasTouchScreen, numberOfCameras, stock, processor, type).
 
@@ -141,31 +142,28 @@ public:
 
         while (sqlite3_step(stmt) == SQLITE_ROW) {
             rowCount++;
+
             stock = getSQLInt(stmt, 7);
-            
-            if (stock != 0) {
-                // We want to show a product to the user only when stock for it is avaialable.
-                productName = getSQLText(stmt, 0);
-                countryOfOrigin = getSQLText(stmt, 1);
-                price = getSQLInt(stmt, 2);
-                type = getSQLInt(stmt, 9);
+            productName = getSQLText(stmt, 0);
+            countryOfOrigin = getSQLText(stmt, 1);
+            price = getSQLInt(stmt, 2);
+            type = getSQLInt(stmt, 9);
 
-                if (type == Product::smartphone) {
-                    ram = getSQLInt(stmt, 3);
-                    rom = getSQLInt(stmt, 4);
-                    numberOfCameras = getSQLInt(stmt, 6);
-                    processor = getSQLText(stmt, 8);
+            if (type == Product::smartphone) {
+                ram = getSQLInt(stmt, 3);
+                rom = getSQLInt(stmt, 4);
+                numberOfCameras = getSQLInt(stmt, 6);
+                processor = getSQLText(stmt, 8);
 
-                    productDetails.push_back(Smartphone(productName, countryOfOrigin, price, stock, numberOfCameras, processor, ram, rom).toStr());
-                } else if (type == Product::laptop) {
-                    ram = getSQLInt(stmt, 3);
-                    rom = getSQLInt(stmt, 4);
-                    hasTouchScreen = getSQLInt(stmt, 5);
+                productDetails.push_back(Smartphone(productName, countryOfOrigin, price, stock, numberOfCameras, processor, ram, rom).toStr());
+            } else if (type == Product::laptop) {
+                ram = getSQLInt(stmt, 3);
+                rom = getSQLInt(stmt, 4);
+                hasTouchScreen = getSQLInt(stmt, 5);
 
-                    productDetails.push_back(Laptop(productName, countryOfOrigin, price, stock, ram, rom, hasTouchScreen).toStr());
-                } else {
-                    Logger::Critical("Product of unknown type in the database. Corruption of data possible.");
-                }
+                productDetails.push_back(Laptop(productName, countryOfOrigin, price, stock, ram, rom, hasTouchScreen).toStr());
+            } else {
+                Logger::Critical("Product of unknown type in the database. Corruption of data possible.");
             }
         }
 
@@ -181,6 +179,36 @@ public:
         strcpy(response, toSend.c_str());
     }
     
+    void getProductNames(string type) {
+        string sql, productName;
+        vector<string> products;
+        
+        if (type == "all") {
+            sql = "SELECT productName FROM ProductDetail WHERE stock > 0;";
+        } else if (type == "smartphone") {
+            sql = "SELECT productName FROM ProductDetails WHERE type = " + to_string(Product::smartphone) + " AND stock > 0;";
+        } else if (type == "laptop") {
+            sql = "SELECT productName FROM ProductDetails WHERE type = " + to_string(Product::laptop) + " AND stock > 0;";
+        } else {
+            response = (char*) "Wrong type entered";
+            return;
+        }
+
+        sqlite3_stmt* stmt;
+        sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
+
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            productName = getSQLText(stmt, 0);
+            products.push_back(productName);
+        }
+
+        sqlite3_finalize(stmt);
+
+        string toSend = join("\n", products);
+        response = new char[toSend.size()];
+        strcpy(response, toSend.c_str());        
+    }
+
     void buy(string username, string productName, int qauntity) {
         // Write select query here.
         char *zErrMsg = 0;
