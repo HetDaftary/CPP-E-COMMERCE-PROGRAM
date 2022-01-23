@@ -17,6 +17,10 @@ enum LogPriority
 	TracePriority, DebugPriority, InfoPriority, WarnPriority, ErrorPriority, CriticalPriority
 };
 
+/**
+ * @brief The Logger class that handles all the logging.
+ * 
+ */
 class Logger
 {
 private:
@@ -26,88 +30,121 @@ private:
 	static FILE** files;
 
 public:
+	/**
+	 * @brief Set the Minimum priority level to be logged.
+	 * 
+	 * @param new_priority 
+	 */
 	static void SetPriority(LogPriority new_priority)
 	{
 		priority = new_priority;
 	}
 
+	/**
+	 * @brief Enables output to the file.
+	 * After calling this, the output will be written to the files.
+	 */
 	static void EnableFileOutput()
 	{
 		enable_file_output();
 	}
 
+	/**
+	 * @brief After this, the output will no longer be written to the files.
+	 * It disables the file output.
+	 */
 	static void CloseFileOutput()
 	{
 		free_file();
 	}
 
+	/**
+	 * @brief Logs traces.
+	 * 
+	 * @tparam Args 
+	 * @param message 
+	 * @param args 
+	 */
 	template<typename... Args>
 	static void Trace(const char* message, Args... args)
 	{
 		log(TracePriority, message, args...);
 	}
 
+	/**
+	 * @brief Logs Debug.
+	 * 
+	 * @tparam Args 
+	 * @param message 
+	 * @param args 
+	 */
 	template<typename... Args>
 	static void Debug(const char* message, Args... args)
 	{
 		log(DebugPriority, message, args...);
 	}
 
+	/**
+	 * @brief Logs Info.
+	 * 
+	 * @tparam Args 
+	 * @param message 
+	 * @param args 
+	 */
 	template<typename... Args>
 	static void Info(const char* message, Args... args)
 	{
 		log(InfoPriority, message, args...);
 	}
 
+	/**
+	 * @brief Logs Warnings.
+	 * 
+	 * @tparam Args 
+	 * @param message 
+	 * @param args 
+	 */
 	template<typename... Args>
 	static void Warn(const char* message, Args... args)
 	{
 		log(WarnPriority, message, args...);
 	}
 
+	/**
+	 * @brief Logs Errors.
+	 * 
+	 * @tparam Args 
+	 * @param message 
+	 * @param args 
+	 */
 	template<typename... Args>
 	static void Error(const char* message, Args... args)
 	{
 		log(ErrorPriority, message, args...);
 	}
 
+	/**
+	 * @brief Logs Critical failures.
+	 * 
+	 * @tparam Args 
+	 * @param message 
+	 * @param args 
+	 */
 	template<typename... Args>
 	static void Critical(const char* message, Args... args)
 	{
 		log(CriticalPriority, message, args...);
 	}
-
-	static void PrintDatabase(sqlite3* db) {
-		// This log comes at Debug level.
-		int rc;
-		char query[] = "SELECT * FROM Stock";
-
-		sqlite3_stmt* stmt;
-		rc = sqlite3_prepare_v2(db, query, -1, &stmt, 0);
-		if (rc != SQLITE_OK) {
-			Logger::Error("Can't prepare database: %s\n", sqlite3_errmsg(db));
-		} else {
-			// Write time to the file.
-
-			std::time_t current_time = std::time(0);
-			std::tm* timestamp = std::localtime(&current_time);
-			char buffer[80];
-			strftime(buffer, 80, "%c", timestamp);
-
-			logMutex.lock();
-
-			fprintf(files[DebugPriority], "%s Database contents:\n", buffer);
-			// Print comma separated values.
-			while (sqlite3_step(stmt) == SQLITE_ROW) {
-				fprintf(files[DebugPriority], "%s, ", (const char*)sqlite3_column_text(stmt, 0));
-				fprintf(files[DebugPriority], "%s, ", (const char*)sqlite3_column_text(stmt, 1));
-				fprintf(files[DebugPriority], "%d\n", sqlite3_column_int(stmt, 2));
-			}	
-			logMutex.unlock();
-		}
-	}
-
 private:
+	/**
+	 * @brief The helper function for logging.
+	 * It handles the main logging related work.
+	 * 
+	 * @tparam Args 
+	 * @param message_priority 
+	 * @param message 
+	 * @param args 
+	 */
 	template<typename... Args>
 	static void log(LogPriority message_priority, const char* message, Args... args) {
 		
@@ -126,6 +163,10 @@ private:
 		logMutex.unlock();
 	}
 
+	/**
+	 * @brief Helper function for EnableFileOutput.
+	 * 
+	 */
 	static void enable_file_output()
 	{
 		int i;
@@ -137,6 +178,10 @@ private:
 		}
 	}
 
+	/**
+	 * @brief Helper funciton for CloseFileOutput.
+	 * 
+	 */
 	static void free_file()
 	{
 		if (files) {

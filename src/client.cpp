@@ -25,12 +25,25 @@ using std::vector;
 
 string seperator = ",";
 
+/**
+ * @brief Gets the sha512 hash of the given string.
+ * 
+ * @param toHash 
+ * @return string 
+ */
 string sha512(string toHash) {
     unsigned char* hash = (unsigned char*) malloc(SHA512_DIGEST_LENGTH);
     SHA512((const unsigned char*)toHash.c_str(), toHash.length(), hash);
     return string((char*) hash);
 }
 
+/**
+ * @brief Joins the strings with delim between them.
+ * 
+ * @param delim 
+ * @param strings 
+ * @return string 
+ */
 string join(string delim, vector<string> strings) {
     string result = "";
     for (string s : strings) {
@@ -39,6 +52,13 @@ string join(string delim, vector<string> strings) {
     return result;
 } 
 
+/**
+ * @brief Sends the request to the server and gets back the response.
+ * 
+ * @param sock 
+ * @param toSendParts 
+ * @return string 
+ */
 string handleRequest(int sock, vector<string> toSendParts) {
     string toSend = join(seperator, toSendParts);
     int sendRes = send(sock, toSend.c_str(), toSend.size(), 0);
@@ -57,6 +77,12 @@ string handleRequest(int sock, vector<string> toSendParts) {
     return string(buf);
 }
 
+/**
+ * @brief The main function for the client.
+ * The main client application.
+ * 
+ * @return int 
+ */
 int main() {
     Logger::EnableFileOutput();
 

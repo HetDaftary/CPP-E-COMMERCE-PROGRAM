@@ -20,6 +20,13 @@ string seperator = ",";
 string ordersFileName = "data/orders.txt";
 mutex ordersFileMutex;
 
+/**
+ * @brief Joins all the strings with delim between them.
+ * 
+ * @param delim 
+ * @param strings 
+ * @return string 
+ */
 string join(string delim, vector<string> strings) {
     string result = "";
     for (int i = 0; i < strings.size() - 1; i++) {
@@ -33,33 +40,74 @@ string join(string delim, vector<string> strings) {
     return result;
 } 
 
+/**
+ * @brief An easier way to get int column.
+ * 
+ * @param stmt 
+ * @param colName 
+ * @return int 
+ */
 int getSQLInt(sqlite3_stmt* stmt, int colName) {
     return sqlite3_column_int(stmt, colName);
 }
 
+/**
+ * @brief An easier way to get string column.
+ * 
+ * @param stmt 
+ * @param colName 
+ * @return string 
+ */
 string getSQLText(sqlite3_stmt* stmt, int colName) {
     return string((char*)sqlite3_column_text(stmt, colName));
 }
 
+/**
+ * @brief The operation class contains all the operations to be performed on the database.
+ * 
+ */
 class Operation {
     sqlite3* db;
     bool isSharedConnection;
     char* response = NULL;
 public:
+    /**
+     * @brief Construct a new Operation object
+     * Creates it's own connection to the database.
+     * To be used when SQLITE is in MULTI-THREADED mode.
+     */
     Operation() {
         sqlite3_open(databaseFileName.c_str(), &db);
         isSharedConnection = false;
     }
 
+    /**
+     * @brief Construct a new Operation object
+     * Gets the shared database object.
+     * To be used when SQLITE is in SERIALIZED mode.
+     * @param db 
+     */
     Operation(sqlite3* db) {
         this->db = db;
         isSharedConnection = true;
     }
 
+    /**
+     * @brief Get the Response object
+     * 
+     * @return char* 
+     */
     char* getResponse() {
         return response;
     }
 
+    /**
+     * @brief Create a User in the in the database.
+     * 
+     * @param username 
+     * @param password 
+     * @param initialBalance 
+     */
     void createUser(string username, string password, int initialBalance) {
         // Write insert query here.
         char *zErrMsg = 0;
@@ -75,6 +123,12 @@ public:
         }
     }
 
+    /**
+     * @brief Checks if the login credintials are correct.
+     * 
+     * @param username 
+     * @param password 
+     */
     void login(string username, string password) {
         // Write select query here.
         string sql = "SELECT password from Users WHERE username='" + username + "';";
@@ -102,6 +156,12 @@ public:
 
     }
 
+    /**
+     * @brief Changes password in the database.
+     * 
+     * @param username 
+     * @param newPassword 
+     */
     void changePassword(string username, string newPassword) {
         // Write update query here.
         char *zErrMsg = 0;
@@ -114,6 +174,11 @@ public:
         // This statement will throw errors when the username is not found.
     }
 
+    /**
+     * @brief Get the Product Details from the database.
+     * 
+     * @param userWants 
+     */
     void getProductDetails(string userWants) {
         //printf("%s %d\n", userWants.c_str(), userWants.length());
         
@@ -128,7 +193,7 @@ public:
         } else if (userWants == "smartphone") {
             sql = "SELECT * FROM ProductDetails WHERE type = " + to_string(Product::smartphone) + " AND stock > 0;";
         } else if (userWants == "laptop") {
-            sql = "SELECT * FROM ProductDetails WHERE type = " + to_string(Product::laptop) + " COLLATE NOCASE AND stock > 0;";
+            sql = "SELECT * FROM ProductDetails WHERE type = " + to_string(Product::laptop) + " AND stock > 0;";
         } else {
             sql = "SELECT * FROM ProductDetails WHERE productName = '" + userWants + "' COLLATE NOCASE AND stock > 0;";
         }
@@ -179,6 +244,11 @@ public:
         strcpy(response, toSend.c_str());
     }
     
+    /**
+     * @brief Get the Product Names from the database.
+     * 
+     * @param type 
+     */
     void getProductNames(string type) {
         string sql, productName;
         vector<string> products;
@@ -209,6 +279,13 @@ public:
         strcpy(response, toSend.c_str());        
     }
 
+    /**
+     * @brief Buys a product from the database.
+     * 
+     * @param username 
+     * @param productName 
+     * @param qauntity 
+     */
     void buy(string username, string productName, int qauntity) {
         // Write select query here.
         char *zErrMsg = 0;
@@ -283,6 +360,12 @@ public:
         }
     }
     
+    /**
+     * @brief Adds money to user's account.
+     * 
+     * @param username 
+     * @param amount 
+     */
     void addMoney(string username, int amount) {
         // Update User balance and add amount.
         char *zErrMsg = NULL;
@@ -298,6 +381,11 @@ public:
         response = (char*)"Added money";
     }
 
+    /**
+     * @brief Get the Orders of an user.
+     * 
+     * @param username 
+     */
     void getOrders(string username) {
         // A user can access his/her orders.
         vector<string> orders;
@@ -330,7 +418,12 @@ public:
         // So, it gets freed after the completion of this function.
         //std::cout << response << endl;
     }
-
+    
+    /**
+     * @brief Get the account balance of an user.
+     * 
+     * @param username 
+     */
     void getBalance(string username) {
         char* zErrMsg = 0;
         string sql = "SELECT balance FROM Users WHERE username = '" + username + "';";
@@ -354,6 +447,11 @@ public:
         // So, it gets freed after the completion of this function.
     }
 
+    /**
+     * @brief Destroy the Operation object
+     * Closes the database connection object if it openned it.
+     * Does not close the connection object incase it was a shared one.
+     */
     ~Operation() {
         if (!isSharedConnection) {
             sqlite3_close(db);

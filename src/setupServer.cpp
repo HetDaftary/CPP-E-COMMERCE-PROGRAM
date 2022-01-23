@@ -51,6 +51,11 @@ uniform_int_distribution<int> hasTouchScreenDistribution(0, 2);
 uniform_int_distribution<int> priceDistribution(10000, 20001);
 uniform_int_distribution<int> stockDistribution(10, 100);
 
+/**
+ * @brief Get the Smartphone Details 
+ * 
+ * @param products 
+ */
 void getSmartphoneDetails(vector<Product*>& products) {
     for (int i = 0; i < numberOfSmartphones; i++) {
         string productName = smartphoneNames[i], processor = "Snapdragon", countryOfOrigin = countries[countryDistribution(mt)];
@@ -62,6 +67,11 @@ void getSmartphoneDetails(vector<Product*>& products) {
     }
 }
 
+/**
+ * @brief Get the Laptop Details
+ * 
+ * @param products 
+ */
 void getLaptopDetails(vector<Product*>& products) {
     vector<Product*> laptops;
     for (int i = 0; i < numberOfSmartphones; i++) {
@@ -74,7 +84,11 @@ void getLaptopDetails(vector<Product*>& products) {
     }
 }
 
-
+/**
+ * @brief The main function that setup the stuff necessary to start the server.
+ * 
+ * @return int 
+ */
 int main() {
     Logger::EnableFileOutput();
     sqlite3* db;

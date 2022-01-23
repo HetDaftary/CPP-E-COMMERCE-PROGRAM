@@ -28,6 +28,13 @@ queue<int> connectionQueue;
 mutex queueMutex;
 condition_variable queueCondition;
 
+/**
+ * @brief Splits the string based on delim.
+ * 
+ * @param delim 
+ * @param toSplit 
+ * @return vector<string> 
+ */
 vector<string> split(string delim, string toSplit) {
     char* toSplitC = (char*)toSplit.c_str();
     
@@ -42,6 +49,13 @@ vector<string> split(string delim, string toSplit) {
     return result;
 }
 
+/**
+ * @brief Tells us the thing to be send to user for the given request.
+ * 
+ * @param buffer 
+ * @param db 
+ * @return char* 
+ */
 char* solveRequest(char* buffer, sqlite3* db) {
     vector<string> request = split(seperator, string(buffer));
 
@@ -70,6 +84,12 @@ char* solveRequest(char* buffer, sqlite3* db) {
     return newOp.getResponse();
 }
 
+/**
+ * @brief The stuff we have to do with a connection from a client.
+ * 
+ * @param socket 
+ * @param db 
+ */
 void handleConnection(int socket, sqlite3* db) {
     char buffer[SOMAXCONN];
     int valread;
@@ -81,6 +101,12 @@ void handleConnection(int socket, sqlite3* db) {
     close(socket);
 }
 
+/**
+ * @brief The thread function for the threads of the thread pool.
+ * They check for anywork and if found, they get it from the connection queue.
+ * 
+ * @param db 
+ */
 void threadFunction(sqlite3* db) {
     int socket;
     while (true) {
@@ -96,6 +122,14 @@ void threadFunction(sqlite3* db) {
     }
 }
 
+/**
+ * @brief The main function for the server.
+ * It starts the server and creates the thread pool.
+ * 
+ * @param argc 
+ * @param argv 
+ * @return int 
+ */
 int main(int argc, char* argv[]) {
     Logger::EnableFileOutput();
     sqlite3_config(SQLITE_CONFIG_SERIALIZED);
