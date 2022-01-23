@@ -1,10 +1,10 @@
 #include "sqlite3.h"
-#include "Logger/logger.hpp"
+#include "../Logger/logger.hpp"
 #include <iostream>
 #include <cstring>
 #include <vector>
 #include <fstream>
-#include "products/products.hpp"
+#include "../products/products.hpp"
 
 using std::to_string;
 using std::vector;
