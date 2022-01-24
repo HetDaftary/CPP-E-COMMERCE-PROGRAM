@@ -6,12 +6,12 @@
  *
  */
 
-#include "sqlite3.h"
-#include "logger.hpp"
+#include <sqlite3.h>
+#include "../include/logger.hpp"
 #include <iostream>
 #include <vector>
-#include "sqlite3.h"
-#include "products.hpp"
+#include "../include/sqlite3.h"
+#include "../include/products.hpp"
 #include <random>
 #include <fstream>
 

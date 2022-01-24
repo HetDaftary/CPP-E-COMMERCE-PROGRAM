@@ -1,4 +1,4 @@
-#include "logger.hpp"
+#include "../include/logger.hpp"
 
 LogPriority Logger::priority = TracePriority;
 const char* Logger::filepaths[] = {"data/Logs/TraceLogs.txt", "data/Logs/DebugLogs.txt", "data/Logs/InfoLogs.txt", "data/Logs/WarningLogs.txt", "data/Logs/ErrorLogs.txt", "data/Logs/CriticalLogs.txt"};

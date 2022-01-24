@@ -1,4 +1,4 @@
-#include "operation.hpp"
+#include "../include/../include/operation.hpp"
 // #include <stdio.h> 
 #include <string.h>   //strlen 
 // #include <stdlib.h> 
@@ -13,8 +13,8 @@
 #include <queue>
 #include <mutex>
 #include <condition_variable>
-#include "sqlite3.h"
-#include "logger.hpp"
+#include <sqlite3.h>
+#include "../include/../include/logger.hpp"
 
 #define PORT 54000
 #define PENDING_CONNECTIONS 10

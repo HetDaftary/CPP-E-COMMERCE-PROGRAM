@@ -11,7 +11,7 @@
 // For SHA512 function.
 #include <vector>
 #include <cstdlib>
-#include "logger.hpp"
+#include "../include/logger.hpp"
 
 using std::string;
 using std::cout;

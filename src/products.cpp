@@ -1,4 +1,4 @@
-#include "products.hpp"
+#include "../include/products.hpp"
 
 string Product::typeNameString[] = {"smartphone", "laptop"};
 
