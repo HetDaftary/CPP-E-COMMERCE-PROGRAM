@@ -7,11 +7,11 @@
  */
 
 #include "sqlite3.h"
-#include "Logger/logger.hpp"
+#include "logger.hpp"
 #include <iostream>
 #include <vector>
 #include "sqlite3.h"
-#include "products/products.hpp"
+#include "products.hpp"
 #include <random>
 #include <fstream>
 
@@ -90,11 +90,13 @@ void getLaptopDetails(vector<Product*>& products) {
  * @return int 
  */
 int main() {
+    Logger logger;
+
     Logger::EnableFileOutput();
     sqlite3* db;
     char* errorMsg;
 
-    sqlite3_open(databaseFileName.c_str(), &db);
+    sqlite3_open("data/database.db", &db);
     // This file name is mentioned in Logger.
 
     // Creating tables.

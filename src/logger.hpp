@@ -7,9 +7,6 @@
 using std::string;
 using std::mutex;
 
-mutex logMutex;
-string databaseFileName = "data/database.db";
-
 #define numberOfPriorities 6
 
 enum LogPriority
@@ -25,38 +22,29 @@ class Logger
 {
 private:
 	static LogPriority priority;
-	static mutex log_mutex;
 	static const char* filepaths[numberOfPriorities];
 	static FILE** files;
-
+	static mutex logMutex;
 public:
+	static string databaseFileName;
 	/**
 	 * @brief Set the Minimum priority level to be logged.
 	 * 
 	 * @param new_priority 
 	 */
-	static void SetPriority(LogPriority new_priority)
-	{
-		priority = new_priority;
-	}
+	static void SetPriority(LogPriority new_priority);
 
 	/**
 	 * @brief Enables output to the file.
 	 * After calling this, the output will be written to the files.
 	 */
-	static void EnableFileOutput()
-	{
-		enable_file_output();
-	}
+	static void EnableFileOutput();
 
 	/**
 	 * @brief After this, the output will no longer be written to the files.
 	 * It disables the file output.
 	 */
-	static void CloseFileOutput()
-	{
-		free_file();
-	}
+	static void CloseFileOutput();
 
 	/**
 	 * @brief Logs traces.
@@ -135,6 +123,7 @@ public:
 	{
 		log(CriticalPriority, message, args...);
 	}
+
 private:
 	/**
 	 * @brief The helper function for logging.
@@ -167,34 +156,11 @@ private:
 	 * @brief Helper function for EnableFileOutput.
 	 * 
 	 */
-	static void enable_file_output()
-	{
-		int i;
-		if (files == NULL) {
-			files = (FILE**) malloc(numberOfPriorities * sizeof(FILE*));
-		}
-		for (i = 0; i < numberOfPriorities; i++) {
-			files[i] = fopen(filepaths[i], "a");
-		}
-	}
+	static void enable_file_output();
 
 	/**
 	 * @brief Helper funciton for CloseFileOutput.
 	 * 
 	 */
-	static void free_file()
-	{
-		if (files) {
-			for (int i = 0; i < numberOfPriorities; i++) {
-				fclose(files[i]);
-			}
-			free(files);
-			files = NULL;
-		}
-	}
+	static void free_file();
 };
-
-LogPriority Logger::priority = TracePriority;
-mutex Logger::log_mutex;
-const char* Logger::filepaths[] = {"data/Logs/TraceLogs.txt", "data/Logs/DebugLogs.txt", "data/Logs/InfoLogs.txt", "data/Logs/WarningLogs.txt", "data/Logs/ErrorLogs.txt", "data/Logs/CriticalLogs.txt"};
-FILE** Logger::files = NULL;

@@ -1,4 +1,4 @@
-#include "operation/operation.hpp"
+#include "operation.hpp"
 // #include <stdio.h> 
 #include <string.h>   //strlen 
 // #include <stdlib.h> 
@@ -11,7 +11,10 @@
 // #include <sys/time.h> //FD_SET, FD_ISSET, FD_ZERO macros 
 #include <thread>
 #include <queue>
+#include <mutex>
 #include <condition_variable>
+#include "sqlite3.h"
+#include "logger.hpp"
 
 #define PORT 54000
 #define PENDING_CONNECTIONS 10
@@ -27,6 +30,7 @@ thread threadPool[THREAD_POOL_SIZE];
 queue<int> connectionQueue;
 mutex queueMutex;
 condition_variable queueCondition;
+string seperator = ",";
 
 /**
  * @brief Splits the string based on delim.
@@ -135,7 +139,7 @@ int main(int argc, char* argv[]) {
     sqlite3_config(SQLITE_CONFIG_SERIALIZED);
 
     sqlite3* db;
-    sqlite3_open(databaseFileName.c_str(), &db);
+    sqlite3_open(Logger::databaseFileName.c_str(), &db);
 
     int opt = 1;
     int master_socket, addrlen, new_socket, client_socket[PENDING_CONNECTIONS], max_clients = PENDING_CONNECTIONS, activity, i, valread, sd;

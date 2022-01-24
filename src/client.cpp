@@ -11,7 +11,7 @@
 // For SHA512 function.
 #include <vector>
 #include <cstdlib>
-#include "Logger/logger.hpp"
+#include "logger.hpp"
 
 using std::string;
 using std::cout;
@@ -46,12 +46,16 @@ string sha512(string toHash) {
  */
 string join(string delim, vector<string> strings) {
     string result = "";
-    for (string s : strings) {
-        result += s + delim;
+    for (int i = 0; i < strings.size() - 1; i++) {
+        //std::cout << strings[i] << std::endl;
+        result = result + strings[i];
+        result = result + delim;
     }
-    return result;
-} 
+    result = result + strings[strings.size() - 1];
+    //std::cout << result;
 
+    return result;
+}
 /**
  * @brief Sends the request to the server and gets back the response.
  * 
