@@ -10,6 +10,14 @@ Product::Product(string productName, string countryOfOrigin, int price, int stoc
     this->type = type;
 }
 
+Product::Product(char* productName, char* countryOfOrigin, int price, int stock, ProductType type) {
+    this->productName = string(productName);
+    this->countryOfOrigin = string(countryOfOrigin);
+    this->price = price;
+    this->stock = stock;
+    this->type = type;
+}
+
 string Product::toStr() {
     string result = productName + ":\n";
     result += "\tCountry of origin: " + countryOfOrigin + "\n";
@@ -31,6 +39,13 @@ Smartphone::Smartphone(string productName, string countryOfOrigin, int price, in
     this->rom = rom;
 }
 
+Smartphone::Smartphone(char* productName, char* countryOfOrigin, int price, int stock, int numberOfCameras, char* processor, int ram, int rom) : Product(productName, countryOfOrigin, price, stock, smartphone) {
+    this->numberOfCameras = numberOfCameras;
+    this->processor = string(processor);
+    this->ram = ram;
+    this->rom = rom;
+}
+
 string Smartphone::toStr() {
     string result = Product::toStr();
     result += "\tNumber of cameras: " + to_string(numberOfCameras) + "\n";
@@ -48,6 +63,12 @@ char* Smartphone::getSQLInsertStatement() {
 }
 
 Laptop::Laptop(string productName, string countryOfOrigin, int price, int stock, int ram, int rom, int hasTouchScreen) : Product(productName, countryOfOrigin, price, stock, laptop) {
+    this->ram = ram;
+    this->rom = rom;
+    this->hasTouchScreen = hasTouchScreen;
+}
+
+Laptop::Laptop(char* productName, char* countryOfOrigin, int price, int stock, int ram, int rom, int hasTouchScreen) : Product(productName, countryOfOrigin, price, stock, laptop) {
     this->ram = ram;
     this->rom = rom;
     this->hasTouchScreen = hasTouchScreen;

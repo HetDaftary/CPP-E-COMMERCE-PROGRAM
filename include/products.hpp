@@ -35,6 +35,7 @@ public:
      * @param type 
      */
     Product(string productName, string countryOfOrigin, int price, int stock, ProductType type);
+    Product(char* productName, char* countryOfOrigin, int price, int stock, ProductType type);
 
     /**
      * @brief Converts the product info to a string.
@@ -77,6 +78,7 @@ public:
      * @param rom 
      */
     Smartphone(string productName, string countryOfOrigin, int price, int stock, int numberOfCameras, string processor, int ram, int rom); 
+    Smartphone(char* productName, char* countryOfOrigin, int price, int stock, int numberOfCameras, char* processor, int ram, int rom);
 
     /**
      * @brief Converts the smartphone info to a string.
@@ -108,6 +110,7 @@ public:
      * @param hasTouchScreen 
      */
     Laptop(string productName, string countryOfOrigin, int price, int stock, int ram, int rom, int hasTouchScreen);
+    Laptop(char* productName, char* countryOfOrigin, int price, int stock, int ram, int rom, int hasTouchScreen);
 
     /**
      * @brief Converts the laptop info to a string.

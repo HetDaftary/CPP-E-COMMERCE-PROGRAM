@@ -182,7 +182,7 @@ int main() {
             if (response == "0") {
                 cout << "User already exists\n";
             } else {
-                cout << "Sign up sucessful";
+                cout << "Sign up sucessful\n";
                 break;
             }
         } else {

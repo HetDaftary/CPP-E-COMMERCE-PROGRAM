@@ -21,12 +21,80 @@ string join(string delim, vector<string> strings) {
     return result;
 }
 
-int getSQLInt(sqlite3_stmt* stmt, int colName) {
-    return sqlite3_column_int(stmt, colName);
+typedef struct {
+    vector<vector<char*>> dataStr;
+    vector<vector<int>> dataInt;
+} SQLData;
+/**
+ * @brief Will mainly be useful for SELECT queries.
+ * Gets x rows with m string columns and n int columns.
+ * NOTE: User needs to write query in a way that first m string columns are recevied and then n int columns.
+ * 
+ * @param db 
+ * @param query 
+ * @param numberOfColumns 
+ * @return SQLData 
+ */
+SQLData getDataFromSQL(sqlite3* db, string query, int numberOfStrColumns, int numberOfIntColumns) {
+    SQLData data;
+    
+    char* zErrMsg = 0;
+    int rc, i;
+    
+    sqlite3_stmt* stmt;
+    rc = sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, NULL);
+
+    if (rc != SQLITE_OK) {
+        Logger::Error("SQL error: %s\nWas Running query: \"%s\"", sqlite3_errmsg(db), query.c_str());
+        sqlite3_finalize(stmt);
+        return data;
+    }
+
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        vector<char*> row;
+        vector<int> rowInt;
+        for (i = 0; i < numberOfStrColumns; i++) {
+            char* val = (char*)sqlite3_column_text(stmt, i);
+            if (val) {    
+                char* toPush = new char[strlen(val) + 1];
+                strcpy(toPush, val);
+                row.push_back(toPush);
+            } else {
+                row.push_back(NULL);
+            }
+        }
+        for (i = 0; i < numberOfIntColumns; i++) {
+            rowInt.push_back(sqlite3_column_int(stmt, numberOfStrColumns + i));
+        }
+        data.dataStr.push_back(row);
+        data.dataInt.push_back(rowInt);
+    }
+
+    sqlite3_finalize(stmt);
+    return data;
 }
 
-string getSQLText(sqlite3_stmt* stmt, int colName) {
-    return string((char*)sqlite3_column_text(stmt, colName));
+/**
+ * @brief To update database.
+ * Mainly for Insert and Update queries.
+ * 
+ * @param db 
+ * @param query 
+ * @return char* errorMsg.
+ */
+char* putDataInDatabase(sqlite3* db, string query) {
+    sqlite3_stmt* stmt;
+    
+    char* errorMsg;
+    int rc = sqlite3_exec(db, query.c_str(), NULL, NULL, &errorMsg);
+
+    if (rc != SQLITE_OK) {
+        Logger::Error("SQL error: %s\nWas Running query: \"%s\"", errorMsg, query.c_str());
+        sqlite3_free(errorMsg);
+        return errorMsg;
+    }
+
+    return errorMsg;
 }
 
 Operation::Operation() {
@@ -45,10 +113,9 @@ char* Operation::getResponse() {
 
 void Operation::createUser(string username, string password, int initialBalance) {
     // Write insert query here.
-    char *zErrMsg = 0;
     string sql = "INSERT INTO Users (username, password, balance) VALUES ('" + username + "', '" + password + "', " + to_string(initialBalance) + ");";
 
-    sqlite3_exec(db, sql.c_str(), NULL, NULL, & zErrMsg);
+    char *zErrMsg = putDataInDatabase(db, sql);
 
     if (zErrMsg) {
         // If User exists, this will be printed.
@@ -61,36 +128,27 @@ void Operation::createUser(string username, string password, int initialBalance)
 void Operation::login(string username, string password) {
     // Write select query here.
     string sql = "SELECT password from Users WHERE username='" + username + "';";
-        
-    sqlite3_stmt* stmt = NULL;
+    
+    sqlite3_stmt* stmt;
+    int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
 
-    sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
-
-    int rc = sqlite3_step(stmt);
-
-    if (rc == SQLITE_DONE) {
-        response = (char*)"0";
-        return;
-    }
-
-    string passwordOfUsername = string((char*)sqlite3_column_blob(stmt, 0));
-        
-    if (passwordOfUsername == password) {
-        response = (char*)"1";
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+        char* passwordFromDB = (char*)sqlite3_column_blob(stmt, 0);
+        if (password == string(passwordFromDB)) {
+            response = (char*)"1";
+        } else {
+            response = (char*)"0";
+        }
     } else {
         response = (char*)"0";
     }
-
-    sqlite3_finalize(stmt);
-
 }
 
 void Operation::changePassword(string username, string newPassword) {
         // Write update query here.
-    char *zErrMsg = 0;
     string sql = "UPDATE Users SET password = '" + newPassword + "' WHERE username = '" + username + "';";
 
-    sqlite3_exec(db, sql.c_str(), NULL, NULL, &zErrMsg);
+    char* zErrMsg = putDataInDatabase(db, sql);
 
     response = (char*)"Password changed successfully.";
     // We do not need to worry about this because the client's username will always be correct when calling this.
@@ -98,63 +156,58 @@ void Operation::changePassword(string username, string newPassword) {
 }
 
 void Operation::getProductDetails(string userWants) {
-    //printf("%s %d\n", userWants.c_str(), userWants.length());
-        
     string sql;
-    sqlite3_stmt* stmt = NULL;
-    int rc, type, price, stock, ram, rom, hasTouchScreen, numberOfCameras;
-    string productName, countryOfOrigin, processor;
+    int columnNumbers[2];
+    // Firstly, we will ask for all the string columns and then for int columns.
 
-    // We use stock > 0 because we want to show a product to the user only when stock is there for the product.
     if (userWants == "all") {
-        sql = "SELECT * FROM ProductDetails WHERE stock > 0;";
-    } else if (userWants == "smartphone") {
-        sql = "SELECT * FROM ProductDetails WHERE type = " + to_string(Product::smartphone) + " AND stock > 0;";
+        sql = "SELECT productName,countryOfOrigin,processor,price,ram,rom,hasTouchScreen,numberOfCameras,stock,type FROM ProductDetails WHERE stock > 0;";
+        columnNumbers[0] = 3;
+        columnNumbers[1] = 7;
     } else if (userWants == "laptop") {
-        sql = "SELECT * FROM ProductDetails WHERE type = " + to_string(Product::laptop) + " AND stock > 0;";
+        sql = "SELECT productName,countryOfOrigin,price,ram,rom,hasTouchScreen,stock FROM ProductDetails WHERE stock > 0 AND type = " + to_string(Product::laptop) + ";";
+        columnNumbers[0] = 2;
+        columnNumbers[1] = 5;
+    } else if (userWants == "smartphome") {
+        sql = "SELECT productName,countryOfOrigin,price,ram,rom,numberOfCameras,stock FROM ProductDetails WHERE stock > 0 AND type = " + to_string(Product::smartphone) + ";";
+        columnNumbers[0] = 3;
+        columnNumbers[1] = 5;
     } else {
-        sql = "SELECT * FROM ProductDetails WHERE productName = '" + userWants + "' COLLATE NOCASE AND stock > 0;";
+        sql = "SELECT productName,countryOfOrigin,processor,price,ram,rom,hasTouchScreen,numberOfCameras,stock,type FROM ProductDetails WHERE stock > 0 AND productName = '" + userWants + "' COLLATE NOCASE;";
+        columnNumbers[0] = 3;
+        columnNumbers[1] = 7;
     }
-    // Returns table details in format: (productName, countryOfOrigin, price, ram, rom, hasTouchScreen, numberOfCameras, stock, processor, type).
 
-    rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
+    SQLData data = getDataFromSQL(db, sql, columnNumbers[0], columnNumbers[1]);
+    vector<vector<char*>> dataStr = data.dataStr;
+    vector<vector<int>> dataInt = data.dataInt;
 
     vector<string> productDetails;
+    int i;
+    string toPush;
 
-    int rowCount = 0;
-
-    while (sqlite3_step(stmt) == SQLITE_ROW) {
-        rowCount++;
-
-        stock = getSQLInt(stmt, 7);
-        productName = getSQLText(stmt, 0);
-        countryOfOrigin = getSQLText(stmt, 1);
-        price = getSQLInt(stmt, 2);
-        type = getSQLInt(stmt, 9);
-
-        if (type == Product::smartphone) {
-            ram = getSQLInt(stmt, 3);
-            rom = getSQLInt(stmt, 4);
-            numberOfCameras = getSQLInt(stmt, 6);
-            processor = getSQLText(stmt, 8);
-
-            productDetails.push_back(Smartphone(productName, countryOfOrigin, price, stock, numberOfCameras, processor, ram, rom).toStr());
-        } else if (type == Product::laptop) {
-            ram = getSQLInt(stmt, 3);
-            rom = getSQLInt(stmt, 4);
-            hasTouchScreen = getSQLInt(stmt, 5);
-
-            productDetails.push_back(Laptop(productName, countryOfOrigin, price, stock, ram, rom, hasTouchScreen).toStr());
-        } else {
-            Logger::Critical("Product of unknown type in the database. Corruption of data possible.");
-        }
-    }
-
-    sqlite3_finalize(stmt);
-
-    if (rowCount == 0) {
-        response = (char*) "Product Not found";
+    if (data.dataStr.size() == 0) {
+        response = (char*)"Product not found.";
         return;
+    } else if (userWants == "laptop") {
+        for (i = 0; i < dataStr.size(); i++) {
+            toPush = Laptop(string(dataStr[i][0]), string(dataStr[i][1]), dataInt[i][0], dataInt[i][4], dataInt[i][1], dataInt[i][2], dataInt[i][3]).toStr();
+            productDetails.push_back(toPush);
+        }
+    } else if (userWants == "smartphone") {
+        for (i = 0; i < dataStr.size(); i++) {
+            toPush = Smartphone(dataStr[i][0], dataStr[i][1], dataInt[i][0], dataInt[i][4], dataInt[i][3], dataStr[i][2], dataInt[i][1], dataInt[i][2]).toStr();
+            productDetails.push_back(toPush);
+        }
+    } else {
+        for (i = 0; i < dataStr.size(); i++) {
+            if (dataInt[i][6] == Product::smartphone) {
+                toPush = Smartphone(dataStr[i][0], dataStr[i][1], dataInt[i][0], dataInt[i][5], dataInt[i][4], dataStr[i][2], dataInt[i][1], dataInt[i][2]).toStr();
+            } else {
+                toPush = Laptop(dataStr[i][0], dataStr[i][1], dataInt[i][0], dataInt[i][5], dataInt[i][1], dataInt[i][2], dataInt[i][3]).toStr();
+            }
+            productDetails.push_back(toPush);
+        }
     }
 
     string toSend = join("\n", productDetails);
@@ -177,15 +230,10 @@ void Operation::getProductNames(string type) {
         return;
     }
 
-    sqlite3_stmt* stmt;
-    sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
-
-    while (sqlite3_step(stmt) == SQLITE_ROW) {
-        productName = getSQLText(stmt, 0);
-        products.push_back(productName);
+    vector<vector<char*>> data = getDataFromSQL(db, sql, 1, 0).dataStr;
+    for (int i = 0; i < data.size(); i++) {
+        products.push_back(data[i][0]);
     }
-
-    sqlite3_finalize(stmt);
 
     string toSend = join("\n", products);
     response = new char[toSend.size()];
@@ -198,52 +246,40 @@ void Operation::buy(string username, string productName, int qauntity) {
     int currentStock, price, rc;
     string sql;
 
-    sqlite3_stmt* stmt;
-
     try {    
         string sql = "SELECT stock,price FROM ProductDetails WHERE productName = '" + productName + "';";
-        
-        sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
 
-        rc = sqlite3_step(stmt);
+        vector<vector<int>> data = getDataFromSQL(db, sql, 0, 1).dataInt;
 
-        if (rc == SQLITE_DONE) {
-            throw (char*) "Product Not found";
+        if (data.size() == 0) {
+            throw (char*)"Product not found.";
         }
 
-        currentStock = getSQLInt(stmt, 0);
-        price = getSQLInt(stmt, 1);
+        currentStock = data[0][0];
+        price = data[0][1];
 
         if (currentStock < qauntity) {
             throw (char*) "Not enough stock";
         }
-        sqlite3_finalize(stmt);
     } catch (char* error) {
         response = error;
-        sqlite3_finalize(stmt);
     }
 
     // Check balance of user now.
     sql = "SELECT balance FROM Users WHERE username = '" + username + "';";
 
-    rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
-
-    rc = sqlite3_step(stmt);
-
-    int balance = getSQLInt(stmt, 0);
-
-    rc = sqlite3_finalize(stmt);
-
+    int balance = getDataFromSQL(db, sql, 0, 1).dataInt[0][0];
     // Check for the price of the product from laptopDetails or smartphoneDetails 
     // and deduct the price from balance.
 
     if (balance >= qauntity * price) {
         balance -= qauntity * price;
+    
         sql = "UPDATE Users SET balance = " + to_string(balance) + " WHERE username = '" + username + "';";
-        rc = sqlite3_exec(db, sql.c_str(), NULL, NULL, &zErrMsg);
+        putDataInDatabase(db, sql);
 
         sql = "UPDATE ProductDetails SET stock = stock - " + to_string(qauntity) + " WHERE productName = '" + productName + "';";
-        rc = sqlite3_exec(db, sql.c_str(), NULL, NULL, &zErrMsg);
+        putDataInDatabase(db, sql);
             
         response = (char*) "Success";
 
@@ -268,16 +304,11 @@ void Operation::buy(string username, string productName, int qauntity) {
 
 void Operation::addMoney(string username, int amount) {
     // Update User balance and add amount.
-    char *zErrMsg = NULL;
         
     string sql = "UPDATE Users SET balance = balance + " + to_string(amount) + " WHERE username = '" + username + "';";
 
-    int rc = sqlite3_exec(db, sql.c_str(), NULL, NULL, &zErrMsg);
+    putDataInDatabase(db, sql);
         
-    if (zErrMsg) {
-        response = zErrMsg;
-        return;
-    }
     response = (char*)"Added money";
 }
 
@@ -318,15 +349,7 @@ void Operation::getBalance(string username) {
     char* zErrMsg = 0;
     string sql = "SELECT balance FROM Users WHERE username = '" + username + "';";
 
-    sqlite3_stmt *stmt = NULL;
-
-    int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
-
-    rc = sqlite3_step(stmt);
-
-    int balance = getSQLInt(stmt, 0);
-
-    rc = sqlite3_finalize(stmt);
+    int balance = getDataFromSQL(db, sql, 0, 1).dataInt[0][0];
 
     string balanceStr = to_string(balance);
     response = new char[balanceStr.length() + 1];
