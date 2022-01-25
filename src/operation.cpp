@@ -39,10 +39,15 @@ string join(string delim, vector<string> strings) {
     return string(result);
 }
 
+/**
+ * @brief The return type of getDataFromSQL.
+ * This is used to store the data from the SQL query.
+ */
 typedef struct {
     vector<vector<char*>> dataStr;
     vector<vector<int>> dataInt;
 } SQLData;
+
 /**
  * @brief Will mainly be useful for SELECT queries.
  * Gets x rows with m string columns and n int columns.
