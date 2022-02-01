@@ -44,9 +44,9 @@ uniform_int_distribution<int> smartphoneDistribution(0, numberOfSmartphones - 1)
 uniform_int_distribution<int> laptopDistribution(0, numberOfLaptops - 1);
 uniform_int_distribution<int> countryDistribution(0, numberOfCountries - 1);
 uniform_int_distribution<int> ramDistribution(1, 4);
-// We will multiply this with 4 to get ram details like 4, 8, 12, 16.
-// We would also use this ramDistribtion for rom but multiply by 8 for smartphone and 256 for laptops.
-// And we will also use for for number of cameras but has it is.
+//! We will multiply this with 4 to get ram details like 4, 8, 12, 16.
+//! We would also use this ramDistribtion for rom but multiply by 8 for smartphone and 256 for laptops.
+//! And we will also use for for number of cameras but has it is.
 uniform_int_distribution<int> hasTouchScreenDistribution(0, 2);
 uniform_int_distribution<int> priceDistribution(10000, 20001);
 uniform_int_distribution<int> stockDistribution(10, 100);
@@ -54,7 +54,8 @@ uniform_int_distribution<int> stockDistribution(10, 100);
 /**
  * @brief Get the Smartphone Details 
  * 
- * @param products 
+ * @param products: Reference of vector of product. 
+ * This function will add details to this vector and hence does not have any return type.
  */
 void getSmartphoneDetails(vector<Product*>& products) {
     for (int i = 0; i < numberOfSmartphones; i++) {
@@ -70,7 +71,8 @@ void getSmartphoneDetails(vector<Product*>& products) {
 /**
  * @brief Get the Laptop Details
  * 
- * @param products 
+ * @param products : Reference of vector of product. 
+ * This function will add details to this vector and hence does not have any return type.
  */
 void getLaptopDetails(vector<Product*>& products) {
     vector<Product*> laptops;
@@ -97,9 +99,9 @@ int main() {
     char* errorMsg;
 
     sqlite3_open("data/database.db", &db);
-    // This file name is mentioned in Logger.
+    //! This file name is mentioned in Logger.
 
-    // Creating tables.
+    //! Creating tables.
     for (string sql : createTableSyntax) {
         sqlite3_exec(db, sql.c_str(), NULL, NULL, &errorMsg);
         if (errorMsg != NULL) {
@@ -108,12 +110,12 @@ int main() {
         }
     }
 
-    // These functions Laptop and Smartphone details in the productDetails vector.
+    //! These functions Laptop and Smartphone details in the productDetails vector.
     vector<Product*> productDetails;
     getLaptopDetails(productDetails);
     getSmartphoneDetails(productDetails);
 
-    // Inserting products to the database.
+    //! Inserting products to the database.
     for (Product* p : productDetails) {
         sqlite3_exec(db, p->getSQLInsertStatement(), NULL, NULL, &errorMsg);
 

@@ -56,8 +56,8 @@ public:
      * 
      * @return char* 
      */
-    // This method needs to be defined in every derived class.
-    // Concept of interface is used here.
+    //! This method needs to be defined in every derived class.
+    //! Concept of interface is used here.
     virtual char* getSQLInsertStatement() = 0;
 };
 

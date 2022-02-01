@@ -3,7 +3,6 @@
 LogPriority Logger::priority = TracePriority;
 const char* Logger::filepaths[] = {"data/Logs/TraceLogs.txt", "data/Logs/DebugLogs.txt", "data/Logs/InfoLogs.txt", "data/Logs/WarningLogs.txt", "data/Logs/ErrorLogs.txt", "data/Logs/CriticalLogs.txt"};
 FILE** Logger::files = NULL;
-string Logger::databaseFileName = "data/database.db";
 mutex Logger::logMutex;
 
 void Logger::SetPriority(LogPriority new_priority) {

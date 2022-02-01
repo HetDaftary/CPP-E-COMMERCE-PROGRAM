@@ -8,10 +8,11 @@
 #include <arpa/inet.h>
 #include <string>
 #include <openssl/sha.h>
-// For SHA512 function.
+//! For SHA512 function.
 #include <vector>
 #include <cstdlib>
 #include "../include/logger.hpp"
+#include "../include/splitAndJoin.hpp"
 
 using std::string;
 using std::cout;
@@ -38,37 +39,6 @@ string sha512(string toHash) {
 }
 
 /**
- * @brief Joins n strings with Delim.
- * 
- * @param delim 
- * @param strings 
- * @return string 
- */
-string join(string delim, vector<string> strings) {
-    int size = strings.size() - 1;
-    int sizeToReturn = size * delim.size();
-
-    int toStartAt[size + 1];
-    toStartAt[0] = 0;
-
-    for (int i = 0; i < size; i++) {
-        sizeToReturn += strings[i].size();
-        toStartAt[i + 1] = toStartAt[i] + strings[i].size() + delim.size();
-    } sizeToReturn += strings[size].size();
-
-    char* result = new char[sizeToReturn + 1];
-
-    for (int i = 0; i < size; i++) {
-        strcpy(result + toStartAt[i], strings[i].c_str());
-        strcpy(result + toStartAt[i] + strings[i].size(), delim.c_str());  
-    }
-
-    strcpy(result + toStartAt[size], strings[size].c_str());
-
-    return string(result);
-}
-
-/**
  * @brief Sends the request to the server and gets back the response.
  * 
  * @param sock 
@@ -85,7 +55,7 @@ string handleRequest(int sock, vector<string> toSendParts) {
     }
 
     char buf[SOMAXCONN];
-    // Making this buffer dynamic so it does not get removed from the memory.
+    //! Making this buffer dynamic so it does not get removed from the memory.
     
     int valRecv = recv(sock, buf, SOMAXCONN, 0);
     buf[valRecv] = '\0';    
@@ -102,7 +72,7 @@ string handleRequest(int sock, vector<string> toSendParts) {
 int main() {
     Logger::EnableFileOutput();
 
-    //	Create a socket
+    //!	Create a socket
     int sock = socket(AF_INET, SOCK_STREAM, 0);
 
     char buf[SOMAXCONN];
@@ -116,7 +86,7 @@ int main() {
         Logger::Error("Socket not connected.");
     }
 
-    //	Create a hint structure for the server we're connecting with
+    //!	Create a hint structure for the server we're connecting with
     string ipAddress = "127.0.0.1";
 
     sockaddr_in hint;
@@ -124,7 +94,7 @@ int main() {
     hint.sin_port = htons(PORT);
     inet_pton(AF_INET, ipAddress.c_str(), &hint.sin_addr);
 
-    //	Connect to the server on the socket
+    //!	Connect to the server on the socket
     int connectRes = connect(sock, (sockaddr*)&hint, sizeof(hint));
     if (connectRes == -1)
     {
@@ -141,11 +111,11 @@ int main() {
         cin >> option;
         
         transform(option.begin(), option.end(), option.begin(), ::tolower);
-        // We convert string to lower case.
+        //! We convert string to lower case.
 
         if (option == "quit") {
             return 0;
-            // q is entered means the person wants to quit.
+            //! q is entered means the person wants to quit.
         } else if (option == "clear") {
             #if defined(_WIN32) || defined(__CYGWIN__) 
                 system("cls");
@@ -161,7 +131,7 @@ int main() {
 
             password = sha512(password);
             vector<string> toSendParts = {option, username, password};
-            // We are sending password's hash has we cannot send the passwords in plain text.
+            //! We are sending password's hash has we cannot send the passwords in plain text.
 
             string response = handleRequest(sock, toSendParts);
 
@@ -202,7 +172,7 @@ int main() {
         }
     } 
 
-    // So, we have logged in has username.
+    //! So, we have logged in has username.
     while (true) {
         cout << "Options:\n";
         cout << "\tEnter clear to clear screen\n";
@@ -239,8 +209,8 @@ int main() {
                 
                 handleRequest(sock, toSendParts);
                 
-                // We do not need to worry about the response here because only error possible is of username.
-                // We have to receive an empty string because server sends it.
+                //! We do not need to worry about the response here because only error possible is of username.
+                //! We have to receive an empty string because server sends it.
                 cout << "Your password is changed.\n";
                 password = newPassword;
             } else {

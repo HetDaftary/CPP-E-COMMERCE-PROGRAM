@@ -26,7 +26,6 @@ private:
 	static FILE** files;
 	static mutex logMutex;
 public:
-	static string databaseFileName;
 	/**
 	 * @brief Set the Minimum priority level to be logged.
 	 * 

@@ -7,58 +7,9 @@
 static string seperator = ",";
 string ordersFileName = "data/orders.txt";
 mutex ordersFileMutex;
+const string Operation::databaseFileName = "data/database.db";
 
-/**
- * @brief Joins n strings with Delim.
- * 
- * @param delim 
- * @param strings 
- * @return string 
- */
-string join(string delim, vector<string> strings) {
-    int size = strings.size() - 1;
-    int sizeToReturn = size * delim.size();
-
-    int toStartAt[size + 1];
-    toStartAt[0] = 0;
-
-    for (int i = 0; i < size; i++) {
-        sizeToReturn += strings[i].size();
-        toStartAt[i + 1] = toStartAt[i] + strings[i].size() + delim.size();
-    } sizeToReturn += strings[size].size();
-
-    char* result = new char[sizeToReturn + 1];
-
-    for (int i = 0; i < size; i++) {
-        strcpy(result + toStartAt[i], strings[i].c_str());
-        strcpy(result + toStartAt[i] + strings[i].size(), delim.c_str());  
-    }
-
-    strcpy(result + toStartAt[size], strings[size].c_str());
-
-    return string(result);
-}
-
-/**
- * @brief The return type of getDataFromSQL.
- * This is used to store the data from the SQL query.
- */
-typedef struct {
-    vector<vector<char*>> dataStr;
-    vector<vector<int>> dataInt;
-} SQLData;
-
-/**
- * @brief Will mainly be useful for SELECT queries.
- * Gets x rows with m string columns and n int columns.
- * NOTE: User needs to write query in a way that first m string columns are recevied and then n int columns.
- * 
- * @param db 
- * @param query 
- * @param numberOfColumns 
- * @return SQLData 
- */
-SQLData getDataFromSQL(sqlite3* db, string query, int numberOfStrColumns, int numberOfIntColumns) {
+Operation::SQLData Operation::getDataFromSQL(string query, int numberOfStrColumns, int numberOfIntColumns) {
     SQLData data;
     
     char* zErrMsg = 0;
@@ -97,15 +48,7 @@ SQLData getDataFromSQL(sqlite3* db, string query, int numberOfStrColumns, int nu
     return data;
 }
 
-/**
- * @brief To update database.
- * Mainly for Insert and Update queries.
- * 
- * @param db 
- * @param query 
- * @return char* errorMsg.
- */
-char* putDataInDatabase(sqlite3* db, string query) {
+char* Operation::putDataInDatabase(string query) {
     sqlite3_stmt* stmt;
     
     char* errorMsg;
@@ -121,7 +64,7 @@ char* putDataInDatabase(sqlite3* db, string query) {
 }
 
 Operation::Operation() {
-    sqlite3_open(Logger::databaseFileName.c_str(), &db);
+    sqlite3_open(Operation::databaseFileName.c_str(), &db);
     isSharedConnection = false;
 }
 
@@ -135,13 +78,13 @@ char* Operation::getResponse() {
 } 
 
 void Operation::createUser(string username, string password, int initialBalance) {
-    // Write insert query here.
+    //! Write insert query here.
     string sql = "INSERT INTO Users (username, password, balance) VALUES ('" + username + "', '" + password + "', " + to_string(initialBalance) + ");";
 
-    char *zErrMsg = putDataInDatabase(db, sql);
+    char *zErrMsg = putDataInDatabase(sql);
 
     if (zErrMsg) {
-        // If User exists, this will be printed.
+        //! If User exists, this will be printed.
         response = (char*)"0";
     } else {
         response = (char*)"1";
@@ -149,7 +92,7 @@ void Operation::createUser(string username, string password, int initialBalance)
 }
 
 void Operation::login(string username, string password) {
-    // Write select query here.
+    //! Write select query here.
     string sql = "SELECT password from Users WHERE username='" + username + "';";
     
     sqlite3_stmt* stmt;
@@ -168,20 +111,20 @@ void Operation::login(string username, string password) {
 }
 
 void Operation::changePassword(string username, string newPassword) {
-        // Write update query here.
+        //! Write update query here.
     string sql = "UPDATE Users SET password = '" + newPassword + "' WHERE username = '" + username + "';";
 
-    char* zErrMsg = putDataInDatabase(db, sql);
+    char* zErrMsg = putDataInDatabase(sql);
 
     response = (char*)"Password changed successfully.";
-    // We do not need to worry about this because the client's username will always be correct when calling this.
-    // This statement will throw errors when the username is not found.
+    //! We do not need to worry about this because the client's username will always be correct when calling this.
+    //! This statement will throw errors when the username is not found.
 }
 
 void Operation::getProductDetails(string userWants) {
     string sql;
     int columnNumbers[2];
-    // Firstly, we will ask for all the string columns and then for int columns.
+    //! Firstly, we will ask for all the string columns and then for int columns.
 
     if (userWants == "all") {
         sql = "SELECT productName,countryOfOrigin,processor,price,ram,rom,hasTouchScreen,numberOfCameras,stock,type FROM ProductDetails WHERE stock > 0;";
@@ -201,7 +144,7 @@ void Operation::getProductDetails(string userWants) {
         columnNumbers[1] = 7;
     }
 
-    SQLData data = getDataFromSQL(db, sql, columnNumbers[0], columnNumbers[1]);
+    SQLData data = getDataFromSQL(sql, columnNumbers[0], columnNumbers[1]);
     vector<vector<char*>> dataStr = data.dataStr;
     vector<vector<int>> dataInt = data.dataInt;
 
@@ -253,7 +196,7 @@ void Operation::getProductNames(string type) {
         return;
     }
 
-    vector<vector<char*>> data = getDataFromSQL(db, sql, 1, 0).dataStr;
+    vector<vector<char*>> data = getDataFromSQL(sql, 1, 0).dataStr;
     for (int i = 0; i < data.size(); i++) {
         products.push_back(data[i][0]);
     }
@@ -264,7 +207,7 @@ void Operation::getProductNames(string type) {
 }
 
 void Operation::buy(string username, string productName, int qauntity) {
-    // Write select query here.
+    //! Write select query here.
     char *zErrMsg = 0;
     int currentStock, price, rc;
     string sql;
@@ -272,7 +215,7 @@ void Operation::buy(string username, string productName, int qauntity) {
     try {    
         string sql = "SELECT stock,price FROM ProductDetails WHERE productName = '" + productName + "';";
 
-        vector<vector<int>> data = getDataFromSQL(db, sql, 0, 1).dataInt;
+        vector<vector<int>> data = getDataFromSQL(sql, 0, 1).dataInt;
 
         if (data.size() == 0) {
             throw (char*)"Product not found.";
@@ -288,33 +231,33 @@ void Operation::buy(string username, string productName, int qauntity) {
         response = error;
     }
 
-    // Check balance of user now.
+    //! Check balance of user now.
     sql = "SELECT balance FROM Users WHERE username = '" + username + "';";
 
-    int balance = getDataFromSQL(db, sql, 0, 1).dataInt[0][0];
-    // Check for the price of the product from laptopDetails or smartphoneDetails 
-    // and deduct the price from balance.
+    int balance = getDataFromSQL(sql, 0, 1).dataInt[0][0];
+    //! Check for the price of the product from laptopDetails or smartphoneDetails 
+    //! and deduct the price from balance.
 
     if (balance >= qauntity * price) {
         balance -= qauntity * price;
     
         sql = "UPDATE Users SET balance = " + to_string(balance) + " WHERE username = '" + username + "';";
-        putDataInDatabase(db, sql);
+        putDataInDatabase(sql);
 
         sql = "UPDATE ProductDetails SET stock = stock - " + to_string(qauntity) + " WHERE productName = '" + productName + "';";
-        putDataInDatabase(db, sql);
+        putDataInDatabase(sql);
             
         response = (char*) "Success";
 
-        // We need to append this order to data/orders.txt
+        //! We need to append this order to data/orders.txt
         vector<string> partsToAppend = {username, productName, to_string(qauntity), to_string(price)};
         string order = join(seperator, partsToAppend);
-        //std::cout << "Order is " << order << std::endl;
-        //std::cout << username << " " << productName << " " << qauntity << " " << price << std::endl;
+        //!std::cout << "Order is " << order << std::endl;
+        //!std::cout << username << " " << productName << " " << qauntity << " " << price << std::endl;
         
         ordersFileMutex.lock();
-        // Making our write operation thread safe.
-        // Only one thread should be able to access to the file at a time.
+        //! Making our write operation thread safe.
+        //! Only one thread should be able to access to the file at a time.
         ofstream myfile;
         myfile.open ("data/orders.txt", ios::app);
         myfile << order << endl;
@@ -326,23 +269,23 @@ void Operation::buy(string username, string productName, int qauntity) {
 }
 
 void Operation::addMoney(string username, int amount) {
-    // Update User balance and add amount.
+    //! Update User balance and add amount.
         
     string sql = "UPDATE Users SET balance = balance + " + to_string(amount) + " WHERE username = '" + username + "';";
 
-    putDataInDatabase(db, sql);
+    putDataInDatabase(sql);
         
     response = (char*)"Added money";
 }
 
 void Operation::getOrders(string username) {
-    // A user can access his/her orders.
+    //! A user can access his/her orders.
     vector<string> orders;
     orders.push_back("Username,Product Name,Quantity,Price");
 
     ordersFileMutex.lock();
-    // Making our write operation thread safe.
-    // Only one thread should be able to access to the file at a time.
+    //! Making our write operation thread safe.
+    //! Only one thread should be able to access to the file at a time.
         
     ifstream myfile;
     myfile.open (ordersFileName);
@@ -358,29 +301,29 @@ void Operation::getOrders(string username) {
     ordersFileMutex.unlock();
 
     string ans = join("\n", orders);
-    //std::cout << ans;
+    //!std::cout << ans;
     response = new char[ans.length() + 1];
     strcpy(response, ans.c_str());
-    // I am doing this because it throws garbage value otherwise.
-    // c_str returns the char* used by this local string object.
-    // This does not send a copy of the string.
-    // So, it gets freed after the completion of this function.
-    //std::cout << response << endl;
+    //! I am doing this because it throws garbage value otherwise.
+    //! c_str returns the char* used by this local string object.
+    //! This does not send a copy of the string.
+    //! So, it gets freed after the completion of this function.
+    //!std::cout << response << endl;
 }
 
 void Operation::getBalance(string username) {
     char* zErrMsg = 0;
     string sql = "SELECT balance FROM Users WHERE username = '" + username + "';";
 
-    int balance = getDataFromSQL(db, sql, 0, 1).dataInt[0][0];
+    int balance = getDataFromSQL(sql, 0, 1).dataInt[0][0];
 
     string balanceStr = to_string(balance);
     response = new char[balanceStr.length() + 1];
     strcpy(response, balanceStr.c_str());
-    // I am doing this because it throws garbage value otherwise.
-    // c_str returns the char* used by this local string object.
-    // This does not send a copy of the string.
-    // So, it gets freed after the completion of this function.
+    //! I am doing this because it throws garbage value otherwise.
+    //! c_str returns the char* used by this local string object.
+    //! This does not send a copy of the string.
+    //! So, it gets freed after the completion of this function.
 }
 
 Operation::~Operation() {

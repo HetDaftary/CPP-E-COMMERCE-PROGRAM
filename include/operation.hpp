@@ -7,6 +7,7 @@
 #include <fstream>
 #include <mutex>
 #include <sqlite3.h>
+#include "../include/splitAndJoin.hpp"
 
 using std::to_string;
 using std::vector;
@@ -20,41 +21,45 @@ using std::ifstream;
 using std::string;
 
 /**
- * @brief Joins all the strings with delim between them.
- * 
- * @param delim 
- * @param strings 
- * @return string 
- */
-string join(string delim, vector<string> strings); 
-
-/**
- * @brief An easier way to get int column.
- * 
- * @param stmt 
- * @param colName 
- * @return int 
- */
-int getSQLInt(sqlite3_stmt* stmt, int colName);
-
-/**
- * @brief An easier way to get string column.
- * 
- * @param stmt 
- * @param colName 
- * @return string 
- */
-string getSQLText(sqlite3_stmt* stmt, int colName);
-
-/**
  * @brief The operation class contains all the operations to be performed on the database.
  * 
  */
 class Operation {
+private:
     sqlite3* db;
     bool isSharedConnection;
     char* response = NULL;
+    
+    /**
+     * @brief The return type of getDataFromSQL.
+     * This is used to store the data from the SQL query.
+     */
+    typedef struct {
+        vector<vector<char*>> dataStr;
+        vector<vector<int>> dataInt;
+    } SQLData;
+
+    /**
+     * @brief Will mainly be useful for SELECT queries.
+     * Gets x rows with m string columns and n int columns.
+     * NOTE: User needs to write query in a way that first m string columns are recevied and then n int columns.
+     * 
+     * @param query 
+     * @param numberOfColumns 
+     * @return SQLData 
+     */
+    SQLData getDataFromSQL(string query, int numberOfStrColumns, int numberOfIntColumns);
+
+    /**
+     * @brief To update database.
+     * Mainly for Insert and Update queries.
+     * 
+     * @param query 
+     * @return char* errorMsg.
+     */
+    char* putDataInDatabase(string query);
 public:
+    static const string databaseFileName;
     /**
      * @brief Construct a new Operation object
      * Creates it's own connection to the database.
