@@ -10,7 +10,7 @@
 #include "../include/logger.hpp"
 #include <iostream>
 #include <vector>
-#include "../include/sqlite3.h"
+#include "sqlite3.h"
 #include "../include/products.hpp"
 #include <random>
 #include <fstream>
