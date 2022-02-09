@@ -117,6 +117,7 @@ void threadFunction(sqlite3* db) {
 int main(int argc, char* argv[]) {
     printf("Server started\n");
     printf("Do not close this terminal window untill you want to close the server\n");
+    printf("To close, press CTRL+C and then close the terminal window\n");
 
     sqlite3_config(SQLITE_CONFIG_SERIALIZED);
     sqlite3_config(SQLITE_OPEN_FULLMUTEX);
