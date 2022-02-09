@@ -220,7 +220,7 @@ int main() {
             string type;
 
             cout << "Enter product name to get details of a product\n";
-            cout << "Enter smartphone to get details of smartphones and laptop to get details for laptops";
+            cout << "Enter smartphone to get details of smartphones and laptop to get details for laptops\n";
             cout << "Enter all for details of all products\n";
 
             cout << "Enter option: ";
@@ -236,7 +236,7 @@ int main() {
             string type;
             
             cout << "Enter product name to get details of a product\n";
-            cout << "Enter smartphone to get details of smartphones and laptop to get details for laptops";
+            cout << "Enter smartphone to get details of smartphones and laptop to get details for laptops\n";
             cout << "Enter all for details of all products\n";
 
             cout << "Enter option: ";
