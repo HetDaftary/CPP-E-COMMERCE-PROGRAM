@@ -43,7 +43,7 @@ string seperator = ",";
 char* solveRequest(char* buffer, sqlite3* db) {
     vector<string> request = split(seperator, string(buffer));
 
-    Operation newOp;
+    Operation newOp(db);
                     
     if (request[0] == "login") {
         newOp.login(request[1], request[2]);
