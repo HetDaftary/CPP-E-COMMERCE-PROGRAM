@@ -26,7 +26,6 @@ obj/%.o: src/%.cpp
 	$(CXX) -c -o $@ $<
 
 clean:
-	rm -r bin obj
-	mkdir bin obj 
+	rm -r bin/* obj/*
 
 all: bin/client bin/server bin/setupServer

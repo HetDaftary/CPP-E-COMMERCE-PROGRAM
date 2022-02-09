@@ -53,7 +53,7 @@ char* Operation::putDataInDatabase(string query) {
     
     char* errorMsg;
     int rc = sqlite3_exec(db, query.c_str(), NULL, NULL, &errorMsg);
-
+    
     if (rc != SQLITE_OK) {
         Logger::Error("SQL error: %s\nWas Running query: \"%s\"", errorMsg, query.c_str());
         sqlite3_free(errorMsg);
@@ -213,7 +213,7 @@ void Operation::buy(string username, string productName, int qauntity) {
     string sql;
 
     try {    
-        string sql = "SELECT stock,price FROM ProductDetails WHERE productName = '" + productName + "';";
+        string sql = "SELECT stock,price FROM ProductDetails WHERE productName = '" + productName + "' COLLATE NOCASE;";
 
         vector<vector<int>> data = getDataFromSQL(sql, 0, 1).dataInt;
 

@@ -118,12 +118,14 @@ int main(int argc, char* argv[]) {
     printf("Server started\n");
     printf("Do not close this terminal window untill you want to close the server\n");
 
-    Logger::EnableFileOutput();
     sqlite3_config(SQLITE_CONFIG_SERIALIZED);
+    sqlite3_config(SQLITE_OPEN_FULLMUTEX);
 
-    sqlite3* db;
+    sqlite3* db; 
     sqlite3_open(Operation::databaseFileName.c_str(), &db);
 
+    Logger::EnableFileOutput();
+    
     int opt = 1;
     int master_socket, addrlen, new_socket, client_socket[PENDING_CONNECTIONS], max_clients = PENDING_CONNECTIONS, activity, i, valread, sd;
     int max_sd;
