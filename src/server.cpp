@@ -115,6 +115,9 @@ void threadFunction(sqlite3* db) {
  * @return int 
  */
 int main(int argc, char* argv[]) {
+    printf("Server started\n");
+    printf("Do not close this terminal window untill you want to close the server\n");
+
     Logger::EnableFileOutput();
     sqlite3_config(SQLITE_CONFIG_SERIALIZED);
 
