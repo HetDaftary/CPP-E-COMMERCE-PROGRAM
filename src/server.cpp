@@ -14,7 +14,6 @@
 #include <mutex>
 #include <condition_variable>
 #include <sqlite3.h>
-#include "../include/logger.hpp"
 #include "../include/splitAndJoin.hpp"
 
 #define PORT 54000
