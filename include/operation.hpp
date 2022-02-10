@@ -8,17 +8,9 @@
 #include <mutex>
 #include <sqlite3.h>
 #include "../include/splitAndJoin.hpp"
-
-using std::to_string;
-using std::vector;
-using std::stoi;
-using std::ofstream;
-using std::ios;
-using std::endl;
-using std::mutex;
-using std::getline;
-using std::ifstream;
-using std::string;
+#include <cstring>
+#include "../include/logger.hpp"
+#include "../include/products.hpp"
 
 /**
  * @brief The operation class contains all the operations to be performed on the database.
@@ -35,8 +27,8 @@ private:
      * This is used to store the data from the SQL query.
      */
     typedef struct {
-        vector<vector<char*>> dataStr;
-        vector<vector<int>> dataInt;
+        std::vector<std::vector<char*>> dataStr;
+        std::vector<std::vector<int>> dataInt;
     } SQLData;
 
     /**
@@ -48,7 +40,7 @@ private:
      * @param numberOfColumns 
      * @return SQLData 
      */
-    SQLData getDataFromSQL(string query, int numberOfStrColumns, int numberOfIntColumns);
+    SQLData getDataFromSQL(std::string query, int numberOfStrColumns, int numberOfIntColumns);
 
     /**
      * @brief To update database.
@@ -57,9 +49,9 @@ private:
      * @param query 
      * @return char* errorMsg.
      */
-    char* putDataInDatabase(string query);
+    char* putDataInDatabase(std::string query);
 public:
-    static const string databaseFileName;
+    static const std::string databaseFileName;
     /**
      * @brief Construct a new Operation object
      * Creates it's own connection to the database.
@@ -71,86 +63,86 @@ public:
      * @brief Construct a new Operation object
      * Gets the shared database object.
      * To be used when SQLITE is in SERIALIZED mode.
-     * @param db 
+     * @param db : sqlite3*
      */
     Operation(sqlite3* db);
 
     /**
      * @brief Get the Response object
      * 
-     * @return char* 
+     * @return char* : response
      */
     char* getResponse();
 
     /**
      * @brief Create a User in the in the database.
      * 
-     * @param username 
-     * @param password 
-     * @param initialBalance 
+     * @param username : string
+     * @param password : string 
+     * @param initialBalance : int
      */
-    void createUser(string username, string password, int initialBalance);
+    void createUser(std::string username, std::string password, int initialBalance);
 
     /**
      * @brief Checks if the login credintials are correct.
      * 
-     * @param username 
-     * @param password 
+     * @param username : string
+     * @param password : string
      */
-    void login(string username, string password);
+    void login(std::string username, std::string password);
 
     /**
      * @brief Changes password in the database.
      * 
-     * @param username 
-     * @param newPassword 
+     * @param username : string
+     * @param newPassword : string
      */
-    void changePassword(string username, string newPassword); 
+    void changePassword(std::string username, std::string newPassword); 
 
     /**
      * @brief Get the Product Details from the database.
      * 
-     * @param userWants 
+     * @param userWants : string
      */
-    void getProductDetails(string userWants);
+    void getProductDetails(std::string userWants);
     
     /**
      * @brief Get the Product Names from the database.
      * 
-     * @param type 
+     * @param type : string
      */
-    void getProductNames(string type);
+    void getProductNames(std::string type);
 
     /**
      * @brief Buys a product from the database.
      * 
-     * @param username 
-     * @param productName 
-     * @param qauntity 
+     * @param username : string 
+     * @param productName : string
+     * @param qauntity : int
      */
-    void buy(string username, string productName, int qauntity);
+    void buy(std::string username, std::string productName, int qauntity);
     
     /**
      * @brief Adds money to user's account.
      * 
-     * @param username 
-     * @param amount 
+     * @param username : string
+     * @param amount : int
      */
-    void addMoney(string username, int amount);
+    void addMoney(std::string username, int amount);
 
     /**
      * @brief Get the Orders of an user.
      * 
-     * @param username 
+     * @param username : string
      */
-    void getOrders(string username);
+    void getOrders(std::string username);
     
     /**
      * @brief Get the account balance of an user.
      * 
-     * @param username 
+     * @param username : string
      */
-    void getBalance(string username);
+    void getBalance(std::string username);
 
     /**
      * @brief Destroy the Operation object

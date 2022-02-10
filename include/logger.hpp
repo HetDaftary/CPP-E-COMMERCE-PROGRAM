@@ -4,9 +4,6 @@
 #include <ctime>
 #include <sqlite3.h>
 
-using std::string;
-using std::mutex;
-
 #define numberOfPriorities 6
 
 enum LogPriority
@@ -24,12 +21,12 @@ private:
 	static LogPriority priority;
 	static const char* filepaths[numberOfPriorities];
 	static FILE** files;
-	static mutex logMutex;
+	static std::mutex logMutex;
 public:
 	/**
 	 * @brief Set the Minimum priority level to be logged.
 	 * 
-	 * @param new_priority 
+	 * @param new_priority : The new priority level of LogPriority type.
 	 */
 	static void SetPriority(LogPriority new_priority);
 
@@ -48,9 +45,9 @@ public:
 	/**
 	 * @brief Logs traces.
 	 * 
-	 * @tparam Args 
-	 * @param message 
-	 * @param args 
+	 * @tparam Args : This means any type of arguments.
+	 * @param message : The format of the message similar to printf.
+	 * @param args : The arguments of the message similar to args of printf.
 	 */
 	template<typename... Args>
 	static void Trace(const char* message, Args... args)
@@ -61,9 +58,9 @@ public:
 	/**
 	 * @brief Logs Debug.
 	 * 
-	 * @tparam Args 
-	 * @param message 
-	 * @param args 
+	 * @tparam Args : This means any type of arguments.
+	 * @param message : The format of the message similar to printf.
+	 * @param args : The arguments of the message similar to args of printf.
 	 */
 	template<typename... Args>
 	static void Debug(const char* message, Args... args)
@@ -74,9 +71,9 @@ public:
 	/**
 	 * @brief Logs Info.
 	 * 
-	 * @tparam Args 
-	 * @param message 
-	 * @param args 
+	 * @tparam Args : This means any type of arguments.
+	 * @param message : The format of the message similar to printf.
+	 * @param args : The arguments of the message similar to args of printf. 	 
 	 */
 	template<typename... Args>
 	static void Info(const char* message, Args... args)
@@ -87,9 +84,9 @@ public:
 	/**
 	 * @brief Logs Warnings.
 	 * 
-	 * @tparam Args 
-	 * @param message 
-	 * @param args 
+	 * @tparam Args : This means any type of arguments.
+	 * @param message : The format of the message similar to printf.
+	 * @param args : The arguments of the message similar to args of printf.
 	 */
 	template<typename... Args>
 	static void Warn(const char* message, Args... args)
@@ -100,9 +97,9 @@ public:
 	/**
 	 * @brief Logs Errors.
 	 * 
-	 * @tparam Args 
-	 * @param message 
-	 * @param args 
+	 * @tparam Args : This means any type of arguments.
+	 * @param message : The format of the message similar to printf. 
+	 * @param args : The arguments of the message similar to args of printf.
 	 */
 	template<typename... Args>
 	static void Error(const char* message, Args... args)
@@ -113,9 +110,9 @@ public:
 	/**
 	 * @brief Logs Critical failures.
 	 * 
-	 * @tparam Args 
-	 * @param message 
-	 * @param args 
+	 * @tparam Args : This means any type of arguments.
+	 * @param message : The format of the message similar to printf.
+	 * @param args : The arguments of the message similar to args of printf.
 	 */
 	template<typename... Args>
 	static void Critical(const char* message, Args... args)
@@ -128,10 +125,10 @@ private:
 	 * @brief The helper function for logging.
 	 * It handles the main logging related work.
 	 * 
-	 * @tparam Args 
-	 * @param message_priority 
-	 * @param message 
-	 * @param args 
+	 * @tparam Args : This means any type of arguments.
+	 * @param message_priority : The priority of the message. 
+	 * @param message : The format of the message similar to printf.
+	 * @param args : The arguments of the message similar to args of printf.
 	 */
 	template<typename... Args>
 	static void log(LogPriority message_priority, const char* message, Args... args) {
@@ -153,7 +150,6 @@ private:
 
 	/**
 	 * @brief Helper function for EnableFileOutput.
-	 * 
 	 */
 	static void enable_file_output();
 

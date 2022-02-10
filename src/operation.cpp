@@ -1,14 +1,30 @@
 #include "../include/operation.hpp"
 
-#include <cstring>
-#include "../include/logger.hpp"
-#include "../include/products.hpp"
+using std::to_string;
+using std::vector;
+using std::stoi;
+using std::ofstream;
+using std::ios;
+using std::endl;
+using std::mutex;
+using std::getline;
+using std::ifstream;
+using std::string;
 
 static string seperator = ",";
 string ordersFileName = "data/orders.txt";
 mutex ordersFileMutex;
 const string Operation::databaseFileName = "data/database.db";
 
+/**
+     * @brief Will mainly be useful for SELECT queries.
+     * Gets x rows with m string columns and n int columns.
+     * NOTE: User needs to write query in a way that first m string columns are recevied and then n int columns.
+     * 
+     * @param query : string
+     * @param numberOfColumns : int 
+     * @return SQLData : SQLData object
+     */
 Operation::SQLData Operation::getDataFromSQL(string query, int numberOfStrColumns, int numberOfIntColumns) {
     SQLData data;
     
@@ -48,6 +64,13 @@ Operation::SQLData Operation::getDataFromSQL(string query, int numberOfStrColumn
     return data;
 }
 
+/**
+ * @brief To update database.
+ * Mainly for Insert and Update queries.
+ * 
+ * @param query : string
+ * @return char* errorMsg.
+ */
 char* Operation::putDataInDatabase(string query) {
     sqlite3_stmt* stmt;
     
@@ -63,20 +86,43 @@ char* Operation::putDataInDatabase(string query) {
     return errorMsg;
 }
 
+/**
+ * @brief Construct a new Operation object
+ * Creates it's own connection to the database.
+ * To be used when SQLITE is in MULTI-THREADED mode.
+ */
 Operation::Operation() {
     sqlite3_open(Operation::databaseFileName.c_str(), &db);
     isSharedConnection = false;
 }
 
+/**
+ * @brief Construct a new Operation object
+ * Gets the shared database object.
+ * To be used when SQLITE is in SERIALIZED mode.
+ * @param db : sqlite3*
+ */
 Operation::Operation(sqlite3* db) {
     this->db = db;
     isSharedConnection = true;
 }
 
+/**
+ * @brief Get the Response object
+ * 
+ * @return char* response
+ */
 char* Operation::getResponse() {
     return response;
 } 
 
+/**
+ * @brief Create a User in the in the database.
+ * 
+ * @param username : string
+ * @param password : string 
+ * @param initialBalance : int
+ */
 void Operation::createUser(string username, string password, int initialBalance) {
     //! Write insert query here.
     string sql = "INSERT INTO Users (username, password, balance) VALUES ('" + username + "', '" + password + "', " + to_string(initialBalance) + ");";
@@ -91,6 +137,12 @@ void Operation::createUser(string username, string password, int initialBalance)
     }
 }
 
+/**
+ * @brief Checks if the login credintials are correct.
+ * 
+ * @param username : string
+ * @param password : string
+ */
 void Operation::login(string username, string password) {
     //! Write select query here.
     string sql = "SELECT password from Users WHERE username='" + username + "';";
@@ -110,6 +162,12 @@ void Operation::login(string username, string password) {
     }
 }
 
+/**
+ * @brief Changes password in the database.
+ * 
+ * @param username : string
+ * @param newPassword : string 
+ */
 void Operation::changePassword(string username, string newPassword) {
         //! Write update query here.
     string sql = "UPDATE Users SET password = '" + newPassword + "' WHERE username = '" + username + "';";
@@ -121,6 +179,11 @@ void Operation::changePassword(string username, string newPassword) {
     //! This statement will throw errors when the username is not found.
 }
 
+/**
+ * @brief Get the Product Details from the database.
+ * 
+ * @param userWants : string 
+ */
 void Operation::getProductDetails(string userWants) {
     string sql;
     int columnNumbers[2];
@@ -181,6 +244,11 @@ void Operation::getProductDetails(string userWants) {
     strcpy(response, toSend.c_str());
 }
 
+/**
+ * @brief Get the Product Names from the database.
+ * 
+ * @param type : string 
+ */
 void Operation::getProductNames(string type) {
     string sql, productName;
     vector<string> products;
@@ -206,6 +274,13 @@ void Operation::getProductNames(string type) {
     strcpy(response, toSend.c_str());        
 }
 
+/**
+ * @brief Buys a product from the database.
+ * 
+ * @param username : string
+ * @param productName : string
+ * @param qauntity : int
+ */
 void Operation::buy(string username, string productName, int qauntity) {
     //! Write select query here.
     char *zErrMsg = 0;
@@ -268,6 +343,12 @@ void Operation::buy(string username, string productName, int qauntity) {
     }
 }
 
+/**
+ * @brief Adds money to user's account.
+ * 
+ * @param username : string
+ * @param amount : int
+ */
 void Operation::addMoney(string username, int amount) {
     //! Update User balance and add amount.
         
@@ -278,6 +359,11 @@ void Operation::addMoney(string username, int amount) {
     response = (char*)"Added money";
 }
 
+/**
+ * @brief Get the Orders of an user.
+ * 
+ * @param username : string
+ */
 void Operation::getOrders(string username) {
     //! A user can access his/her orders.
     vector<string> orders;
@@ -311,6 +397,11 @@ void Operation::getOrders(string username) {
     //!std::cout << response << endl;
 }
 
+/**
+ * @brief Get the account balance of an user.
+ * 
+ * @param username : string
+ */
 void Operation::getBalance(string username) {
     char* zErrMsg = 0;
     string sql = "SELECT balance FROM Users WHERE username = '" + username + "';";
@@ -326,6 +417,11 @@ void Operation::getBalance(string username) {
     //! So, it gets freed after the completion of this function.
 }
 
+/**
+ * @brief Destroy the Operation object
+ * Closes the database connection object if it openned it.
+ * Does not close the connection object incase it was a shared one.
+ */
 Operation::~Operation() {
     if (!isSharedConnection) {
         sqlite3_close(db);

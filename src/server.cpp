@@ -26,6 +26,8 @@ using std::condition_variable;
 using std::queue;
 using std::unique_lock;
 using std::vector;
+using std::mutex;
+using std::string;
 
 thread threadPool[THREAD_POOL_SIZE];
 queue<int> connectionQueue;
