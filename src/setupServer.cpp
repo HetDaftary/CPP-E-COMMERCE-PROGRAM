@@ -23,6 +23,8 @@ using std::random_device;
 using std::mt19937;
 using std::uniform_int_distribution;
 using std::ofstream;
+using std::cout;
+using std::endl;
 
 const std::string countries[] = {"India", "USA", "Taiwan"};
 const std::string smartphoneNames[] = {"samsung_a21", "samsung_m31", "lava_Z1"};
@@ -133,6 +135,10 @@ int main() {
     ordersFile.close();
 
     sqlite3_close(db);
+
     Logger::CloseFileOutput();
+
+    cout << "closed logger" << endl;
+
     return 0;
 }

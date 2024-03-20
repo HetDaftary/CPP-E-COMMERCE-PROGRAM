@@ -19,6 +19,30 @@ Creating a basic C++ console app for e-commerce related work.
 
 <img src = "img/Class Diagram.png">
 
+## Running this project
+
+- Tested on OS: Ubuntu 22.04 LTS:
+- You will firstly need to install the following packages
+    
+```
+sudo apt update 
+sudo apt install g++ make libsqlite3-dev libssh-dev git -y
+```    
+
+- You will now need to build the project
+
+```
+git clone https://github.com/HetDaftary/CPP-E-COMMERCE-PROGRAM.git
+cd CPP-E-COMMERCE-PROGRAM
+make -j$(nroc)
+```
+
+- Do the setup of the server
+
+```
+./bin/setupServer
+```
+
 ## Credits
 
 - [@Sloan Kelly](https://www.youtube.com/channel/UC4LMPKWdhfFlJrJ1BHmRhMQ) for tutorial on making a TCP client and server in Linux.
